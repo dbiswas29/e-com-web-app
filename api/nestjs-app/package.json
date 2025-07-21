@@ -1,0 +1,46 @@
+{
+  "name": "nestjs-app",
+  "version": "1.0.0",
+  "description": "Nest.js backend for the e-commerce application",
+  "main": "dist/main.js",
+  "scripts": {
+    "start": "node dist/main.js",
+    "build": "tsc",
+    "prestart": "npm run build",
+    "test": "jest",
+    "lint": "eslint . --ext .ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^9.4.3",
+    "@nestjs/core": "^9.4.3",
+    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/passport": "^11.0.5",
+    "@nestjs/platform-express": "^9.0.0",
+    "bcrypt": "^5.0.1",
+    "bcryptjs": "^3.0.2",
+    "class-transformer": "^0.5.0",
+    "class-validator": "^0.13.2",
+    "jsonwebtoken": "^8.5.1",
+    "passport": "^0.4.1",
+    "passport-jwt": "^4.0.1",
+    "pg": "^8.7.1",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.2",
+    "typeorm": "^0.2.34"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^9.0.0",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^27.0.0",
+    "ts-jest": "^27.0.0",
+    "typescript": "^4.5.4"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "testEnvironment": "node"
+  }
+}
