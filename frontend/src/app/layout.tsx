@@ -18,6 +18,18 @@ export const metadata: Metadata = {
   authors: [{ name: 'E-Commerce Team' }],
   creator: 'Modern E-Commerce',
   publisher: 'Modern E-Commerce',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180' },
+    ],
+    other: [
+      { rel: 'mask-icon', url: '/favicon.svg', color: '#3b82f6' },
+    ],
+  },
   robots: {
     index: true,
     follow: true,
@@ -70,10 +82,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <head>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="theme-color" content="#3b82f6" />
+        <meta name="msapplication-TileColor" content="#3b82f6" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
       </head>
       <body className={`${inter.className} h-full flex flex-col`}>
         <a

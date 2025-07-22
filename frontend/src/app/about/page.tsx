@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'About Us',
@@ -123,7 +124,15 @@ export default function AboutPage() {
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">Meet Our Team</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <div className="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
+              <div className="w-24 h-24 mx-auto mb-4 relative rounded-full overflow-hidden">
+                <Image
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=face"
+                  alt="Sarah Johnson"
+                  fill
+                  className="object-cover"
+                  sizes="96px"
+                />
+              </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">Sarah Johnson</h3>
               <p className="text-primary-600 font-medium mb-3">Founder & CEO</p>
               <p className="text-gray-600">
@@ -132,7 +141,15 @@ export default function AboutPage() {
             </div>
             
             <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <div className="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
+              <div className="w-24 h-24 mx-auto mb-4 relative rounded-full overflow-hidden">
+                <Image
+                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face"
+                  alt="Michael Chen"
+                  fill
+                  className="object-cover"
+                  sizes="96px"
+                />
+              </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">Michael Chen</h3>
               <p className="text-primary-600 font-medium mb-3">Head of Technology</p>
               <p className="text-gray-600">
@@ -141,7 +158,15 @@ export default function AboutPage() {
             </div>
             
             <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <div className="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
+              <div className="w-24 h-24 mx-auto mb-4 relative rounded-full overflow-hidden">
+                <Image
+                  src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face"
+                  alt="Emily Rodriguez"
+                  fill
+                  className="object-cover"
+                  sizes="96px"
+                />
+              </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">Emily Rodriguez</h3>
               <p className="text-primary-600 font-medium mb-3">Customer Success Manager</p>
               <p className="text-gray-600">
