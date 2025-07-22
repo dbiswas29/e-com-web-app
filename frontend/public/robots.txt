@@ -1,0 +1,21 @@
+# Robots.txt for E-Commerce Website
+
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://yourdomain.com/sitemap.xml
+
+# Disallow admin and checkout pages
+Disallow: /admin/
+Disallow: /checkout/
+Disallow: /cart/
+Disallow: /api/
+Disallow: /auth/
+
+# Allow product and category pages
+Allow: /products/
+Allow: /categories/
+
+# Crawl delay
+Crawl-delay: 1
