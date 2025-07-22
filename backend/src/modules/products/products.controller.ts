@@ -12,6 +12,7 @@ export class ProductsController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'category', required: false, type: String })
+  @ApiQuery({ name: 'categories', required: false, type: String, description: 'Comma-separated list of categories' })
   @ApiQuery({ name: 'minPrice', required: false, type: Number })
   @ApiQuery({ name: 'maxPrice', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
@@ -19,6 +20,7 @@ export class ProductsController {
     @Query('page') pageStr = '1',
     @Query('limit') limitStr = '20',
     @Query('category') category?: string,
+    @Query('categories') categories?: string,
     @Query('minPrice') minPriceStr?: string,
     @Query('maxPrice') maxPriceStr?: string,
     @Query('search') search?: string,
@@ -28,11 +30,19 @@ export class ProductsController {
     const minPrice = minPriceStr ? parseFloat(minPriceStr) : undefined;
     const maxPrice = maxPriceStr ? parseFloat(maxPriceStr) : undefined;
     
+    // Handle multiple categories or single category
+    let categoryFilter: string[] | undefined;
+    if (categories) {
+      categoryFilter = categories.split(',').map(cat => cat.trim()).filter(cat => cat);
+    } else if (category) {
+      categoryFilter = [category];
+    }
+    
     const skip = (page - 1) * limit;
     return this.productsService.findAll({
       skip,
       take: limit,
-      category,
+      categories: categoryFilter,
       minPrice: isNaN(minPrice) ? undefined : minPrice,
       maxPrice: isNaN(maxPrice) ? undefined : maxPrice,
       search,

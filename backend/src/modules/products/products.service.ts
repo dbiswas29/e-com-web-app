@@ -9,17 +9,23 @@ export class ProductsService {
     skip?: number;
     take?: number;
     category?: string;
+    categories?: string[];
     minPrice?: number;
     maxPrice?: number;
     search?: string;
   }) {
-    const { skip = 0, take = 20, category, minPrice, maxPrice, search } = params || {};
+    const { skip = 0, take = 20, category, categories, minPrice, maxPrice, search } = params || {};
 
     const where: any = {
       isActive: true,
     };
 
-    if (category) {
+    // Handle multiple categories or single category
+    if (categories && categories.length > 0) {
+      where.category = {
+        in: categories,
+      };
+    } else if (category) {
       where.category = category;
     }
 

@@ -7,7 +7,26 @@ import { ProductFilters } from '@/components/products/ProductFilters';
 
 function ProductsContent() {
   const searchParams = useSearchParams();
-  const category = searchParams?.get('category');
+  const categoriesParam = searchParams?.get('categories');
+  const categoryParam = searchParams?.get('category'); // Legacy support
+  
+  const selectedCategories = categoriesParam 
+    ? categoriesParam.split(',').filter(cat => cat.trim()) 
+    : categoryParam 
+      ? [categoryParam] 
+      : [];
+
+  const getPageTitle = () => {
+    if (selectedCategories.length === 0) return 'All Products';
+    if (selectedCategories.length === 1) return `${selectedCategories[0]} Products`;
+    return `${selectedCategories.length} Categories Selected`;
+  };
+
+  const getPageDescription = () => {
+    if (selectedCategories.length === 0) return 'Discover our complete collection of products';
+    if (selectedCategories.length === 1) return `Discover our ${selectedCategories[0].toLowerCase()} collection`;
+    return `Browse products from: ${selectedCategories.join(', ')}`;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -15,14 +34,23 @@ function ProductsContent() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            {category ? `${category} Products` : 'All Products'}
+            {getPageTitle()}
           </h1>
           <p className="text-lg text-gray-600">
-            {category 
-              ? `Discover our ${category.toLowerCase()} collection` 
-              : 'Discover our complete collection of products'
-            }
+            {getPageDescription()}
           </p>
+          {selectedCategories.length > 1 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {selectedCategories.map((category) => (
+                <span 
+                  key={category}
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-800"
+                >
+                  {category}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

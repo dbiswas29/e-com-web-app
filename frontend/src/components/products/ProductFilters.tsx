@@ -13,7 +13,7 @@ export function ProductFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
@@ -22,11 +22,20 @@ export function ProductFilters() {
   // Initialize filters from URL params
   useEffect(() => {
     setMounted(true);
-    const category = searchParams?.get('category') || '';
+    const categoriesParam = searchParams?.get('categories') || '';
+    const categoryParam = searchParams?.get('category') || ''; // Legacy support
     const min = searchParams?.get('minPrice') || '';
     const max = searchParams?.get('maxPrice') || '';
     
-    setSelectedCategory(category);
+    // Support both new 'categories' param and legacy 'category' param
+    let selectedCats: string[] = [];
+    if (categoriesParam) {
+      selectedCats = categoriesParam.split(',').filter(cat => cat.trim());
+    } else if (categoryParam) {
+      selectedCats = [categoryParam];
+    }
+    
+    setSelectedCategories(selectedCats);
     setMinPrice(min);
     setMaxPrice(max);
     
@@ -79,9 +88,21 @@ export function ProductFilters() {
   };
 
   const handleCategoryChange = (category: string) => {
-    const newCategory = selectedCategory === category ? '' : category;
-    setSelectedCategory(newCategory);
-    updateURL({ category: newCategory });
+    const newSelectedCategories = selectedCategories.includes(category)
+      ? selectedCategories.filter(cat => cat !== category)
+      : [...selectedCategories, category];
+    
+    setSelectedCategories(newSelectedCategories);
+    
+    // Update URL with new categories
+    const categoriesParam = newSelectedCategories.length > 0 
+      ? newSelectedCategories.join(',') 
+      : null;
+    
+    updateURL({ 
+      categories: categoriesParam,
+      category: null  // Remove legacy single category param
+    });
   };
 
   const handlePriceFilter = () => {
@@ -92,13 +113,13 @@ export function ProductFilters() {
   };
 
   const clearFilters = () => {
-    setSelectedCategory('');
+    setSelectedCategories([]);
     setMinPrice('');
     setMaxPrice('');
     router.push('/products');
   };
 
-  const hasActiveFilters = mounted && (selectedCategory || minPrice || maxPrice);
+  const hasActiveFilters = mounted && (selectedCategories.length > 0 || minPrice || maxPrice);
 
   // Don't render dynamic content until mounted
   if (!mounted) {
@@ -165,7 +186,7 @@ export function ProductFilters() {
                   <input 
                     type="checkbox" 
                     className="mr-2"
-                    checked={mounted ? selectedCategory === category : false}
+                    checked={mounted ? selectedCategories.indexOf(category) !== -1 : false}
                     onChange={() => handleCategoryChange(category)}
                   />
                   <span className="text-sm">{category}</span>

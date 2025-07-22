@@ -35,7 +35,8 @@ export function ProductsGrid() {
       setIsLoading(true);
       
       // Get filter parameters from URL
-      const category = searchParams?.get('category');
+      const categoriesParam = searchParams?.get('categories');
+      const categoryParam = searchParams?.get('category'); // Legacy single category support
       const minPrice = searchParams?.get('minPrice');
       const maxPrice = searchParams?.get('maxPrice');
       const search = searchParams?.get('search');
@@ -45,7 +46,13 @@ export function ProductsGrid() {
         limit,
       };
       
-      if (category) params.category = category;
+      // Handle multiple categories or single category
+      if (categoriesParam) {
+        params.categories = categoriesParam; // Send as comma-separated string
+      } else if (categoryParam) {
+        params.category = categoryParam; // Legacy single category
+      }
+      
       if (minPrice) params.minPrice = minPrice;
       if (maxPrice) params.maxPrice = maxPrice;
       if (search) params.search = search;
