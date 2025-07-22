@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 
 export function Hero() {
   return (
@@ -58,14 +57,15 @@ export function Hero() {
           {/* Hero Image */}
           <div className="relative">
             <div className="aspect-square relative rounded-2xl overflow-hidden shadow-2xl">
-              <Image
-                src="/hero-image.jpg"
-                alt="Featured products showcase"
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
+              <div className="w-full h-full bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center">
+                <div className="text-white text-center">
+                  <svg className="w-24 h-24 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  <h3 className="text-2xl font-bold mb-2">Featured Products</h3>
+                  <p className="text-primary-100">Discover our best sellers</p>
+                </div>
+              </div>
             </div>
             
             {/* Floating Cards */}

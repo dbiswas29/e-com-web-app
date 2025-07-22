@@ -9,27 +9,55 @@ interface CategoryGroup {
   category: string;
   count: number;
   products: Product[];
-  imageUrl: string;
 }
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<CategoryGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     fetchCategories();
   }, []);
 
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
-      const response = await apiClient.get<Product[]>('/products');
-      const products = response.data;
+      setError(null);
+      console.log('🔥 fetchCategories called');
+      
+      // Test 1: Direct fetch
+      console.log('🔥 Testing direct fetch...');
+      const directResponse = await fetch('http://localhost:3001/api/products');
+      console.log('🔥 Direct fetch response status:', directResponse.status);
+      
+      if (!directResponse.ok) {
+        throw new Error(`Direct fetch failed with status: ${directResponse.status}`);
+      }
+      
+      const directData = await directResponse.json();
+      console.log('🔥 Direct fetch SUCCESS - received products:', directData?.data?.length || 0);
+      
+      // Test 2: API client
+      console.log('🔥 Testing API client...');
+      const response = await apiClient.get<{ data: Product[]; total: number; page: number; limit: number; totalPages: number }>('/products');
+      console.log('🔥 API client SUCCESS - response data type:', typeof response.data);
+      console.log('🔥 API client response keys:', Object.keys(response.data || {}));
+      
+      const responseData = response.data as { data: Product[]; total: number; page: number; limit: number; totalPages: number };
+      const products = responseData.data; // API wraps products in data property
+      console.log('🔥 Products extracted:', products?.length || 0);
+
+      if (!products || !Array.isArray(products)) {
+        throw new Error(`Expected products array, got: ${typeof products}`);
+      }
 
       // Group products by category
       const categoryMap = new Map<string, Product[]>();
-      products.forEach(product => {
+      products.forEach((product, index) => {
+        console.log(`🔥 Processing product ${index}: ${product.name} - ${product.category}`);
         if (!categoryMap.has(product.category)) {
           categoryMap.set(product.category, []);
         }
@@ -41,19 +69,27 @@ export default function CategoriesPage() {
         category,
         count: categoryProducts.length,
         products: categoryProducts,
-        imageUrl: categoryProducts[0]?.imageUrl || '', // Use first product's image as category image
       }));
 
+      console.log('🔥 SUCCESS - Category groups created:', categoryGroups.length);
+      categoryGroups.forEach(group => {
+        console.log(`🔥 Category: ${group.category} (${group.count} products)`);
+      });
+      
       setCategories(categoryGroups);
     } catch (error) {
-      setError('Failed to load categories');
-      console.error('Error fetching categories:', error);
+      console.error('🔥 ERROR in fetchCategories:', error);
+      if (error instanceof Error) {
+        console.error('🔥 Error message:', error.message);
+        console.error('🔥 Error stack:', error.stack);
+      }
+      setError(`Failed to load categories: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (isLoading) {
+  if (!mounted || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-width-container container-padding py-8">
@@ -114,12 +150,16 @@ export default function CategoriesPage() {
               className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
             >
               <div className="relative h-64 overflow-hidden">
-                <img
-                  src={categoryGroup.imageUrl}
-                  alt={categoryGroup.category}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-opacity"></div>
+                <div className="w-full h-full bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 group-hover:from-primary-600 group-hover:to-primary-800 transition-all duration-300 flex items-center justify-center">
+                  <div className="text-white text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                      <span className="text-2xl font-bold text-white">
+                        {mounted ? categoryGroup.category.substring(0, 2).toUpperCase() : '..'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-black bg-opacity-10 group-hover:bg-opacity-20 transition-opacity"></div>
                 <div className="absolute bottom-4 left-4 text-white">
                   <h3 className="text-2xl font-bold mb-1">
                     {categoryGroup.category}
@@ -170,12 +210,10 @@ export default function CategoriesPage() {
                 href={`/products?category=${encodeURIComponent(categoryGroup.category)}`}
                 className="group text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
               >
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full overflow-hidden">
-                  <img
-                    src={categoryGroup.imageUrl}
-                    alt={categoryGroup.category}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform"
-                  />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center group-hover:from-primary-600 group-hover:to-primary-800 transition-all">
+                  <span className="text-white font-bold text-lg">
+                    {mounted ? categoryGroup.category.substring(0, 2).toUpperCase() : '..'}
+                  </span>
                 </div>
                 <h3 className="font-medium text-gray-900 group-hover:text-primary-600 transition-colors">
                   {categoryGroup.category}

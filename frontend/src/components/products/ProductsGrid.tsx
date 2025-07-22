@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Product } from '@/types';
 import { apiClient } from '@/lib/api';
 import { ProductCard } from './ProductCard';
@@ -14,6 +15,7 @@ interface ProductsResponse {
 }
 
 export function ProductsGrid() {
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,15 +28,29 @@ export function ProductsGrid() {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [searchParams]);
 
   const fetchProducts = async (page = 1, limit = 12) => {
     try {
       setIsLoading(true);
-      const response = await apiClient.get<ProductsResponse>('/products', {
+      
+      // Get filter parameters from URL
+      const category = searchParams?.get('category');
+      const minPrice = searchParams?.get('minPrice');
+      const maxPrice = searchParams?.get('maxPrice');
+      const search = searchParams?.get('search');
+      
+      const params: any = {
         page,
         limit,
-      });
+      };
+      
+      if (category) params.category = category;
+      if (minPrice) params.minPrice = minPrice;
+      if (maxPrice) params.maxPrice = maxPrice;
+      if (search) params.search = search;
+
+      const response = await apiClient.get<ProductsResponse>('/products', params);
 
       setProducts(response.data.data);
       setPagination({

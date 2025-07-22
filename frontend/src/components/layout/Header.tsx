@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -15,9 +15,14 @@ import { useCartStore } from '@/store/cartStore';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const { isAuthenticated, user, logout } = useAuthStore();
   const { getTotalItems } = useCartStore();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -31,6 +36,8 @@ export function Header() {
     logout();
     router.push('/');
   };
+
+  const totalItems = mounted ? getTotalItems() : 0;
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -82,18 +89,18 @@ export function Header() {
             <Link
               href="/cart"
               className="relative p-2 text-gray-700 hover:text-primary-600 transition-colors"
-              aria-label={`Shopping cart with ${getTotalItems()} items`}
+              aria-label={`Shopping cart with ${totalItems} items`}
             >
               <ShoppingCartIcon className="h-6 w-6" />
-              {getTotalItems() > 0 && (
+              {totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {getTotalItems()}
+                  {totalItems}
                 </span>
               )}
             </Link>
 
             {/* User Menu */}
-            {isAuthenticated ? (
+            {mounted && isAuthenticated ? (
               <div className="relative group">
                 <button className="flex items-center space-x-2 p-2 text-gray-700 hover:text-primary-600 transition-colors">
                   <UserIcon className="h-6 w-6" />
@@ -124,7 +131,7 @@ export function Header() {
                   </button>
                 </div>
               </div>
-            ) : (
+            ) : mounted && !isAuthenticated ? (
               <div className="flex items-center space-x-2">
                 <Link
                   href="/auth/login"
@@ -139,7 +146,7 @@ export function Header() {
                   Sign up
                 </Link>
               </div>
-            )}
+            ) : null}
 
             {/* Mobile menu button */}
             <button
@@ -181,7 +188,7 @@ export function Header() {
                 <input
                   type="text"
                   placeholder="Search products..."
-                  className="input pl-10 pr-4 w-full"
+                  className="input pl-10 pr-4"
                   aria-label="Search products"
                 />
               </div>
