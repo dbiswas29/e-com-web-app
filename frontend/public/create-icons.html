@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Icons</title>
+</head>
+<body>
+    <canvas id="canvas192" width="192" height="192" style="border: 1px solid #ccc; margin: 10px;"></canvas>
+    <canvas id="canvas512" width="512" height="512" style="border: 1px solid #ccc; margin: 10px;"></canvas>
+    <br>
+    <button onclick="createIcons()">Create Icons</button>
+    <br>
+    <a id="download192" style="display: none;">Download 192x192</a>
+    <a id="download512" style="display: none;">Download 512x512</a>
+
+    <script>
+        function createIcons() {
+            // Create 192x192 icon
+            const canvas192 = document.getElementById('canvas192');
+            const ctx192 = canvas192.getContext('2d');
+            
+            // Draw a simple e-commerce icon (shopping bag)
+            ctx192.fillStyle = '#3b82f6';
+            ctx192.fillRect(0, 0, 192, 192);
+            
+            ctx192.fillStyle = '#ffffff';
+            ctx192.fillRect(48, 48, 96, 96);
+            
+            ctx192.fillStyle = '#3b82f6';
+            ctx192.font = '48px Arial';
+            ctx192.textAlign = 'center';
+            ctx192.fillText('E', 96, 110);
+            
+            // Create 512x512 icon
+            const canvas512 = document.getElementById('canvas512');
+            const ctx512 = canvas512.getContext('2d');
+            
+            ctx512.fillStyle = '#3b82f6';
+            ctx512.fillRect(0, 0, 512, 512);
+            
+            ctx512.fillStyle = '#ffffff';
+            ctx512.fillRect(128, 128, 256, 256);
+            
+            ctx512.fillStyle = '#3b82f6';
+            ctx512.font = '128px Arial';
+            ctx512.textAlign = 'center';
+            ctx512.fillText('E', 256, 290);
+            
+            // Create download links
+            const link192 = document.getElementById('download192');
+            const link512 = document.getElementById('download512');
+            
+            canvas192.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                link192.href = url;
+                link192.download = 'icon-192.png';
+                link192.style.display = 'inline';
+                link192.textContent = 'Download 192x192';
+            });
+            
+            canvas512.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                link512.href = url;
+                link512.download = 'icon-512.png';
+                link512.style.display = 'inline';
+                link512.textContent = 'Download 512x512';
+            });
+        }
+    </script>
+</body>
+</html>
