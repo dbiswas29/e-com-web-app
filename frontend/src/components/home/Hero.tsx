@@ -10,7 +10,7 @@ export function Hero() {
       <div className="relative max-width-container container-padding py-24 lg:py-32">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
-          <div className="space-y-8">
+          <div className="space-y-8 relative z-10">
             <div className="space-y-4">
               <h1 className="text-4xl lg:text-6xl font-bold leading-tight">
                 Discover Amazing
@@ -22,7 +22,7 @@ export function Hero() {
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 relative z-10">
               <Link
                 href="/products"
                 className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-primary-600 bg-white rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-primary-600"
@@ -69,12 +69,12 @@ export function Hero() {
             </div>
             
             {/* Floating Cards */}
-            <div className="absolute -top-4 -left-4 bg-white text-gray-900 p-4 rounded-lg shadow-lg">
+            <div className="absolute -top-4 -left-4 bg-white text-gray-900 p-4 rounded-lg shadow-lg z-0">
               <div className="text-sm font-medium">Free Shipping</div>
               <div className="text-xs text-gray-600">On orders $50+</div>
             </div>
             
-            <div className="absolute -bottom-4 -right-4 bg-yellow-400 text-gray-900 p-4 rounded-lg shadow-lg">
+            <div className="absolute -bottom-4 -right-4 bg-yellow-400 text-gray-900 p-4 rounded-lg shadow-lg z-0">
               <div className="text-sm font-medium">Best Price</div>
               <div className="text-xs text-gray-600">Guaranteed</div>
             </div>
