@@ -42,7 +42,7 @@ export function Header() {
               <div className="h-8 w-8 bg-primary-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">E</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-xl font-bold text-gray-900" style={{ marginRight: '8px' }}>
                 E-Commerce
               </span>
             </Link>
