@@ -4,6 +4,31 @@ import { enableFetchMocks } from 'jest-fetch-mock'
 // Enable fetch mocks
 enableFetchMocks()
 
+// Suppress React act() warnings for async state updates that are properly tested
+const originalError = console.error
+beforeAll(() => {
+  console.error = (...args) => {
+    if (
+      args[0]?.includes?.('Warning: An update to') &&
+      args[0]?.includes?.('was not wrapped in act')
+    ) {
+      return
+    }
+    // Also suppress expected error logs from our tests
+    if (
+      args[0]?.includes?.('Error fetching products:') ||
+      args[0]?.includes?.('Failed to fetch products')
+    ) {
+      return
+    }
+    originalError.call(console, ...args)
+  }
+})
+
+afterAll(() => {
+  console.error = originalError
+})
+
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
   useRouter() {

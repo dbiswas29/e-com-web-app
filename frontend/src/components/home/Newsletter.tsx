@@ -29,7 +29,7 @@ export function Newsletter() {
         exclusive deals, and special offers.
       </p>
       
-      <form onSubmit={handleSubmit} className="max-w-md mx-auto">
+      <form onSubmit={handleSubmit} className="max-w-md mx-auto" aria-label="Newsletter signup form">
         <div className="flex gap-4">
           <input
             type="email"
