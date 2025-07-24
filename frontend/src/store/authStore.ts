@@ -47,6 +47,10 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
           });
 
+          // Fetch cart after successful login
+          const { useCartStore } = await import('./cartStore');
+          useCartStore.getState().fetchCart();
+
           toast.success('Login successful!');
         } catch (error: any) {
           set({ isLoading: false });
@@ -72,6 +76,10 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
           });
 
+          // Fetch cart after successful registration
+          const { useCartStore } = await import('./cartStore');
+          useCartStore.getState().fetchCart();
+
           toast.success('Registration successful!');
         } catch (error: any) {
           set({ isLoading: false });
@@ -83,6 +91,11 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         deleteCookie('accessToken');
         deleteCookie('refreshToken');
+        
+        // Clear cart on logout
+        const { useCartStore } = require('./cartStore');
+        useCartStore.getState().clearCart();
+        
         set({
           user: null,
           isAuthenticated: false,
@@ -97,7 +110,15 @@ export const useAuthStore = create<AuthState>()(
             user: response.data,
             isAuthenticated: true,
           });
+          
+          // Fetch cart if user is authenticated
+          const { useCartStore } = await import('./cartStore');
+          useCartStore.getState().fetchCart();
         } catch (error) {
+          // Clear cart if authentication fails
+          const { useCartStore } = require('./cartStore');
+          useCartStore.getState().clearCart();
+          
           set({
             user: null,
             isAuthenticated: false,

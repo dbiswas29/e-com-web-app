@@ -23,8 +23,10 @@ export default function LoginPage() {
     register,
     handleSubmit,
     formState: { errors },
+    trigger,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    mode: 'onTouched',
   });
 
   const onSubmit = async (data: LoginFormData) => {

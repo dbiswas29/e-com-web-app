@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export function Hero() {
   return (
-    <section className="relative bg-gradient-to-r from-primary-600 to-primary-800 text-white overflow-hidden">
+    <section className="relative bg-gradient-to-r from-primary-600 to-primary-800 text-white overflow-hidden" role="region" aria-label="Hero section">
       <div className="absolute inset-0 bg-black opacity-20"></div>
       
       <div className="relative max-width-container container-padding py-24 lg:py-32">
@@ -59,7 +59,7 @@ export function Hero() {
             <div className="aspect-square relative rounded-2xl overflow-hidden shadow-2xl">
               <div className="w-full h-full bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center">
                 <div className="text-white text-center">
-                  <svg className="w-24 h-24 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-24 h-24 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" role="img" aria-label="Shopping bag icon">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
                   <h3 className="text-2xl font-bold mb-2">Featured Products</h3>

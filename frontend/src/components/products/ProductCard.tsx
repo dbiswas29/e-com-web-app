@@ -15,8 +15,10 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, showAddToCart = true }: ProductCardProps) {
-  const { addToCart, isLoading } = useCartStore();
+  const { addToCart, isItemLoading } = useCartStore();
   const { isAuthenticated } = useAuthStore();
+
+  const isLoading = isItemLoading(product.id);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -87,6 +89,7 @@ export function ProductCard({ product, showAddToCart = true }: ProductCardProps)
           {/* Quick add to cart */}
           {showAddToCart && product.stock > 0 && (
             <button
+              type="button"
               onClick={handleAddToCart}
               disabled={isLoading}
               className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-gray-50 disabled:opacity-50"
@@ -126,6 +129,7 @@ export function ProductCard({ product, showAddToCart = true }: ProductCardProps)
             
             {showAddToCart && (
               <button
+                type="button"
                 onClick={handleAddToCart}
                 disabled={isLoading || product.stock === 0}
                 className="btn-primary text-sm px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"

@@ -45,7 +45,7 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2 focus:outline-none focus:ring-0">
               <div className="h-8 w-8 bg-primary-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">E</span>
               </div>
@@ -61,7 +61,7 @@ export function Header() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                className="text-gray-700 hover:text-primary-600 transition-colors font-medium focus:outline-none focus:ring-0"
               >
                 {item.name}
               </Link>
@@ -88,7 +88,7 @@ export function Header() {
             {/* Cart */}
             <Link
               href="/cart"
-              className="relative p-2 text-gray-700 hover:text-primary-600 transition-colors"
+              className="relative p-2 text-gray-700 hover:text-primary-600 transition-colors focus:outline-none focus:ring-0"
               aria-label={`Shopping cart with ${totalItems} items`}
             >
               <ShoppingCartIcon className="h-6 w-6" />
@@ -102,7 +102,7 @@ export function Header() {
             {/* User Menu */}
             {mounted && isAuthenticated ? (
               <div className="relative group">
-                <button className="flex items-center space-x-2 p-2 text-gray-700 hover:text-primary-600 transition-colors">
+                <button className="flex items-center space-x-2 p-2 text-gray-700 hover:text-primary-600 transition-colors focus:outline-none focus:ring-0">
                   <UserIcon className="h-6 w-6" />
                   <span className="hidden md:block text-sm">
                     {user?.firstName}
@@ -125,7 +125,7 @@ export function Header() {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-0"
                   >
                     Sign out
                   </button>
@@ -135,13 +135,13 @@ export function Header() {
               <div className="flex items-center space-x-2">
                 <Link
                   href="/auth/login"
-                  className="text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                  className="text-gray-700 hover:text-primary-600 transition-colors font-medium focus:outline-none focus:ring-0"
                 >
                   Login
                 </Link>
                 <Link
                   href="/auth/register"
-                  className="btn-primary text-sm px-4 py-2"
+                  className="btn-primary text-sm px-4 py-2 focus:outline-none focus:ring-0"
                 >
                   Sign up
                 </Link>
@@ -150,8 +150,9 @@ export function Header() {
 
             {/* Mobile menu button */}
             <button
+              type="button"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-gray-700 hover:text-primary-600 transition-colors"
+              className="md:hidden p-2 text-gray-700 hover:text-primary-600 transition-colors focus:outline-none focus:ring-0"
               aria-label="Toggle menu"
             >
               {isMenuOpen ? (
@@ -171,7 +172,7 @@ export function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md transition-colors"
+                  className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md transition-colors focus:outline-none focus:ring-0"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.name}
