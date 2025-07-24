@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { apiClient } from '@/lib/api';
+import { localProductService } from '@/lib/localDataService';
 import { Product } from '@/types';
 import { ProductCard } from '@/components/products/ProductCard';
 
@@ -12,8 +12,8 @@ export function FeaturedProducts() {
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
       try {
-        const response = await apiClient.get<{ data: Product[] }>('/products?limit=4&featured=true');
-        setProducts(response.data.data);
+        const response = await localProductService.getFeaturedProducts(4);
+        setProducts(response.data);
       } catch (error) {
         console.error('Failed to fetch featured products:', error);
       } finally {

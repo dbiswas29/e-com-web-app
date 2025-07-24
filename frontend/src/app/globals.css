@@ -13,9 +13,24 @@
     @apply font-sans text-gray-900;
   }
 
-  /* Focus styles for accessibility */
+  /* Remove default focus styles and blue outlines */
   *:focus {
-    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+    @apply outline-none;
+  }
+
+  /* Prevent blue boxes/outlines on click */
+  button:focus,
+  a:focus,
+  *:focus {
+    box-shadow: none !important;
+    outline: none !important;
+  }
+
+  /* Focus styles for form elements that need them */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    @apply ring-1 ring-primary-300 ring-offset-1;
   }
 
   /* Skip link for accessibility */

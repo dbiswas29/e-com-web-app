@@ -2,14 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { apiClient } from '@/lib/api';
+import { localProductService, CategoryGroup } from '@/lib/localDataService';
 import { Product } from '@/types';
-
-interface CategoryGroup {
-  category: string;
-  count: number;
-  products: Product[];
-}
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<CategoryGroup[]>([]);
@@ -28,49 +22,7 @@ export default function CategoriesPage() {
       setError(null);
       console.log('🔥 fetchCategories called');
       
-      // Test 1: Direct fetch
-      console.log('🔥 Testing direct fetch...');
-      const directResponse = await fetch('http://localhost:3001/api/products');
-      console.log('🔥 Direct fetch response status:', directResponse.status);
-      
-      if (!directResponse.ok) {
-        throw new Error(`Direct fetch failed with status: ${directResponse.status}`);
-      }
-      
-      const directData = await directResponse.json();
-      console.log('🔥 Direct fetch SUCCESS - received products:', directData?.data?.length || 0);
-      
-      // Test 2: API client
-      console.log('🔥 Testing API client...');
-      const response = await apiClient.get<{ data: Product[]; total: number; page: number; limit: number; totalPages: number }>('/products');
-      console.log('🔥 API client SUCCESS - response data type:', typeof response.data);
-      console.log('🔥 API client response keys:', Object.keys(response.data || {}));
-      
-      const responseData = response.data as { data: Product[]; total: number; page: number; limit: number; totalPages: number };
-      const products = responseData.data; // API wraps products in data property
-      console.log('🔥 Products extracted:', products?.length || 0);
-
-      if (!products || !Array.isArray(products)) {
-        throw new Error(`Expected products array, got: ${typeof products}`);
-      }
-
-      // Group products by category
-      const categoryMap = new Map<string, Product[]>();
-      products.forEach((product, index) => {
-        console.log(`🔥 Processing product ${index}: ${product.name} - ${product.category}`);
-        if (!categoryMap.has(product.category)) {
-          categoryMap.set(product.category, []);
-        }
-        categoryMap.get(product.category)!.push(product);
-      });
-
-      // Convert to CategoryGroup array
-      const categoryGroups: CategoryGroup[] = Array.from(categoryMap.entries()).map(([category, categoryProducts]) => ({
-        category,
-        count: categoryProducts.length,
-        products: categoryProducts,
-      }));
-
+      const categoryGroups = await localProductService.getCategoryGroups();
       console.log('🔥 SUCCESS - Category groups created:', categoryGroups.length);
       categoryGroups.forEach(group => {
         console.log(`🔥 Category: ${group.category} (${group.count} products)`);

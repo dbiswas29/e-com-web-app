@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingCartIcon, StarIcon } from '@heroicons/react/24/outline';
@@ -15,8 +16,9 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, showAddToCart = true }: ProductCardProps) {
-  const { addToCart, isLoading } = useCartStore();
+  const { addToCart } = useCartStore();
   const { isAuthenticated } = useAuthStore();
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -27,10 +29,13 @@ export function ProductCard({ product, showAddToCart = true }: ProductCardProps)
       return;
     }
 
+    setIsAddingToCart(true);
     try {
       await addToCart(product.id);
     } catch (error) {
       // Error is handled in the store
+    } finally {
+      setIsAddingToCart(false);
     }
   };
 
@@ -88,7 +93,7 @@ export function ProductCard({ product, showAddToCart = true }: ProductCardProps)
           {showAddToCart && product.stock > 0 && (
             <button
               onClick={handleAddToCart}
-              disabled={isLoading}
+              disabled={isAddingToCart}
               className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-gray-50 disabled:opacity-50"
               aria-label={`Add ${product.name} to cart`}
             >
@@ -127,10 +132,10 @@ export function ProductCard({ product, showAddToCart = true }: ProductCardProps)
             {showAddToCart && (
               <button
                 onClick={handleAddToCart}
-                disabled={isLoading || product.stock === 0}
+                disabled={isAddingToCart || product.stock === 0}
                 className="btn-primary text-sm px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                {isAddingToCart ? 'Adding...' : product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
               </button>
             )}
           </div>

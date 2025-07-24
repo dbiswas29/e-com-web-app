@@ -14,6 +14,7 @@ A modern, full-stack e-commerce web application built with Next.js (frontend) an
 - **SEO Optimized**: Meta tags, structured data, sitemap
 - **Accessible**: WCAG 2.1 AA compliant
 - **Performance**: Image optimization, lazy loading, code splitting
+- **Local Data Service**: Products now served from local JSON file for faster development
 
 ### Backend (NestJS)
 - **RESTful APIs**: Products, Users, Cart, Orders
@@ -34,6 +35,7 @@ A modern, full-stack e-commerce web application built with Next.js (frontend) an
 - **Icons**: Heroicons
 - **Forms**: React Hook Form + Zod
 - **HTTP Client**: Axios
+- **Local Data**: JSON-based product data service
 
 ### Backend
 - **Framework**: NestJS
@@ -43,6 +45,25 @@ A modern, full-stack e-commerce web application built with Next.js (frontend) an
 - **Validation**: Class Validator
 - **Documentation**: Swagger
 - **Testing**: Jest
+
+## 📄 Local Data Implementation
+
+The application now includes a local data service that serves product data from a JSON file instead of requiring the backend API for product-related operations. This improves development speed and reduces dependencies.
+
+### Local Data Features:
+- **Product Data**: Stored in `frontend/src/data/products.json`
+- **Local Service**: `frontend/src/lib/localDataService.ts` provides all product operations
+- **API Compatibility**: Local API routes at `/api/products` and `/api/categories` for compatibility
+- **Full Feature Support**: Filtering, pagination, search, categories, and product details
+- **Simulated Delays**: Realistic API response times for better UX testing
+
+### Updated Components:
+- `ProductsGrid`: Now uses local data service
+- `FeaturedProducts`: Fetches featured products locally
+- `ProductFilters`: Gets categories from local data
+- `Categories Page`: Uses local category grouping
+- `Product Detail Page`: Retrieves individual products locally
+- `Test API Page`: Tests local data service
 
 ## 📦 Installation
 

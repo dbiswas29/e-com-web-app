@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useCartStore } from '@/store/cartStore';
 import { MinusIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
 export function CartItems() {
   const { cart, isLoading, fetchCart, updateCartItem, removeFromCart } = useCartStore();
+  const [loadingItems, setLoadingItems] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchCart();
@@ -63,18 +64,24 @@ export function CartItems() {
   }
 
   const handleQuantityChange = async (itemId: string, newQuantity: number) => {
+    setLoadingItems(prev => ({ ...prev, [itemId]: true }));
     try {
       await updateCartItem(itemId, newQuantity);
     } catch (error) {
       console.error('Failed to update cart item:', error);
+    } finally {
+      setLoadingItems(prev => ({ ...prev, [itemId]: false }));
     }
   };
 
   const handleRemoveItem = async (itemId: string) => {
+    setLoadingItems(prev => ({ ...prev, [itemId]: true }));
     try {
       await removeFromCart(itemId);
     } catch (error) {
       console.error('Failed to remove cart item:', error);
+    } finally {
+      setLoadingItems(prev => ({ ...prev, [itemId]: false }));
     }
   };
 
@@ -112,7 +119,7 @@ export function CartItems() {
               <div className="flex items-center space-x-3">
                 <button
                   onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                  disabled={isLoading}
+                  disabled={loadingItems[item.id]}
                   className="p-1 rounded-full border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
                 >
                   <MinusIcon className="w-4 h-4" />
@@ -124,7 +131,7 @@ export function CartItems() {
                 
                 <button
                   onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                  disabled={isLoading}
+                  disabled={loadingItems[item.id]}
                   className="p-1 rounded-full border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
                 >
                   <PlusIcon className="w-4 h-4" />
@@ -141,7 +148,7 @@ export function CartItems() {
               {/* Remove Button */}
               <button
                 onClick={() => handleRemoveItem(item.id)}
-                disabled={isLoading}
+                disabled={loadingItems[item.id]}
                 className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full disabled:opacity-50"
                 title="Remove item"
               >

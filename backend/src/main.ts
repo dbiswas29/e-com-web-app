@@ -10,9 +10,15 @@ async function bootstrap() {
   // Security
   app.use(helmet());
   
-  // CORS
+  // CORS - Updated to support multiple origins for development
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001', 
+      'http://localhost:3002',
+      'http://localhost:3003',
+      process.env.FRONTEND_URL || 'http://localhost:3003'
+    ],
     credentials: true,
   });
 
@@ -47,7 +53,7 @@ async function bootstrap() {
     customCss: '.swagger-ui .topbar { display: none }',
   });
 
-  const port = process.env.PORT || 3001;
+  const port = process.env.PORT || 3002;
   await app.listen(port);
   
   console.log(`🚀 Server running on http://localhost:${port}`);

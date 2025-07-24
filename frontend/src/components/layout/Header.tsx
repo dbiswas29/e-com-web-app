@@ -61,7 +61,7 @@ export function Header() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                className="text-gray-700 hover:text-primary-600 transition-colors font-medium focus:outline-none focus:ring-0"
               >
                 {item.name}
               </Link>
@@ -77,7 +77,7 @@ export function Header() {
               <input
                 type="text"
                 placeholder="Search products..."
-                className="input pl-10 pr-4"
+                className="input pl-10 pr-4 focus:ring-0 focus:border-primary-500"
                 aria-label="Search products"
               />
             </div>
@@ -88,7 +88,7 @@ export function Header() {
             {/* Cart */}
             <Link
               href="/cart"
-              className="relative p-2 text-gray-700 hover:text-primary-600 transition-colors"
+              className="relative p-2 text-gray-700 hover:text-primary-600 transition-colors focus:outline-none focus:ring-0"
               aria-label={`Shopping cart with ${totalItems} items`}
             >
               <ShoppingCartIcon className="h-6 w-6" />
@@ -102,7 +102,7 @@ export function Header() {
             {/* User Menu */}
             {mounted && isAuthenticated ? (
               <div className="relative group">
-                <button className="flex items-center space-x-2 p-2 text-gray-700 hover:text-primary-600 transition-colors">
+                <button className="flex items-center space-x-2 p-2 text-gray-700 hover:text-primary-600 transition-colors focus:outline-none focus:ring-0">
                   <UserIcon className="h-6 w-6" />
                   <span className="hidden md:block text-sm">
                     {user?.firstName}
@@ -113,19 +113,27 @@ export function Header() {
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                   <Link
                     href="/profile"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-0"
                   >
                     Profile
                   </Link>
                   <Link
                     href="/orders"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-0"
                   >
                     Orders
                   </Link>
+                  {user?.role === 'ADMIN' && (
+                    <Link
+                      href="/admin/users"
+                      className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 focus:outline-none focus:ring-0 border-t border-gray-100"
+                    >
+                      👑 Admin Panel
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-0 border-t border-gray-100"
                   >
                     Sign out
                   </button>
@@ -135,13 +143,13 @@ export function Header() {
               <div className="flex items-center space-x-2">
                 <Link
                   href="/auth/login"
-                  className="text-gray-700 hover:text-primary-600 transition-colors font-medium"
+                  className="text-gray-700 hover:text-primary-600 transition-colors font-medium focus:outline-none focus:ring-0"
                 >
                   Login
                 </Link>
                 <Link
                   href="/auth/register"
-                  className="btn-primary text-sm px-4 py-2"
+                  className="btn-primary text-sm px-4 py-2 focus:outline-none focus:ring-0"
                 >
                   Sign up
                 </Link>
@@ -151,7 +159,7 @@ export function Header() {
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-gray-700 hover:text-primary-600 transition-colors"
+              className="md:hidden p-2 text-gray-700 hover:text-primary-600 transition-colors focus:outline-none focus:ring-0"
               aria-label="Toggle menu"
             >
               {isMenuOpen ? (
@@ -171,7 +179,7 @@ export function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md transition-colors"
+                  className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md transition-colors focus:outline-none focus:ring-0"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.name}
@@ -188,7 +196,7 @@ export function Header() {
                 <input
                   type="text"
                   placeholder="Search products..."
-                  className="input pl-10 pr-4"
+                  className="input pl-10 pr-4 focus:ring-0 focus:border-primary-500"
                   aria-label="Search products"
                 />
               </div>

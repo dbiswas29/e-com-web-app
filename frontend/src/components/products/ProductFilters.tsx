@@ -2,12 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { apiClient } from '@/lib/api';
-
-interface Category {
-  category: string;
-  count: number;
-}
+import { localProductService, Category } from '@/lib/localDataService';
 
 export function ProductFilters() {
   const router = useRouter();
@@ -45,21 +40,7 @@ export function ProductFilters() {
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
-      const response = await apiClient.get<{ data: any[]; total: number }>('/products');
-      const products = response.data.data;
-
-      // Group products by category to get counts
-      const categoryMap = new Map<string, number>();
-      products.forEach(product => {
-        const count = categoryMap.get(product.category) || 0;
-        categoryMap.set(product.category, count + 1);
-      });
-
-      const categoryList: Category[] = Array.from(categoryMap.entries()).map(([category, count]) => ({
-        category,
-        count,
-      }));
-
+      const categoryList = await localProductService.getCategories();
       setCategories(categoryList);
     } catch (error) {
       console.error('Error fetching categories:', error);

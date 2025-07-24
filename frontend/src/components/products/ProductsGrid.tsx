@@ -3,16 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Product } from '@/types';
-import { apiClient } from '@/lib/api';
+import { localProductService, ProductsResponse } from '@/lib/localDataService';
 import { ProductCard } from './ProductCard';
-
-interface ProductsResponse {
-  data: Product[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
 
 export function ProductsGrid() {
   const searchParams = useSearchParams();
@@ -41,30 +33,30 @@ export function ProductsGrid() {
       const maxPrice = searchParams?.get('maxPrice');
       const search = searchParams?.get('search');
       
-      const params: any = {
+      const filters: any = {
         page,
         limit,
       };
       
       // Handle multiple categories or single category
       if (categoriesParam) {
-        params.categories = categoriesParam; // Send as comma-separated string
+        filters.categories = categoriesParam; // Send as comma-separated string
       } else if (categoryParam) {
-        params.category = categoryParam; // Legacy single category
+        filters.category = categoryParam; // Legacy single category
       }
       
-      if (minPrice) params.minPrice = minPrice;
-      if (maxPrice) params.maxPrice = maxPrice;
-      if (search) params.search = search;
+      if (minPrice) filters.minPrice = minPrice;
+      if (maxPrice) filters.maxPrice = maxPrice;
+      if (search) filters.search = search;
 
-      const response = await apiClient.get<ProductsResponse>('/products', params);
+      const response = await localProductService.getProducts(filters);
 
-      setProducts(response.data.data);
+      setProducts(response.data);
       setPagination({
-        total: response.data.total,
-        page: response.data.page,
-        limit: response.data.limit,
-        totalPages: response.data.totalPages,
+        total: response.total,
+        page: response.page,
+        limit: response.limit,
+        totalPages: response.totalPages,
       });
       setError(null);
     } catch (error) {

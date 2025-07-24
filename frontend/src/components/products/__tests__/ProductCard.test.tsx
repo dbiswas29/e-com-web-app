@@ -32,7 +32,6 @@ describe('ProductCard', () => {
     reviewCount: 10,
     stock: 5,
     features: ['Feature 1', 'Feature 2'],
-    isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   }
@@ -59,7 +58,7 @@ describe('ProductCard', () => {
       login: jest.fn(),
       register: jest.fn(),
       logout: jest.fn(),
-      getProfile: jest.fn(),
+      checkAuth: jest.fn(),
     })
 
     jest.clearAllMocks()
@@ -131,10 +130,16 @@ describe('ProductCard', () => {
     expect(mockAddToCart).not.toHaveBeenCalled()
   })
 
-  it('should disable add to cart button when loading', () => {
+  it('should show loading state when adding to cart', async () => {
+    // Mock the addToCart to return a promise that we can control
+    const addToCartPromise = new Promise<void>((resolve) => {
+      setTimeout(resolve, 100)
+    })
+    mockAddToCart.mockReturnValue(addToCartPromise)
+
     mockUseCartStore.mockReturnValue({
       cart: null,
-      isLoading: true,
+      isLoading: false,
       addToCart: mockAddToCart,
       removeFromCart: jest.fn(),
       updateCartItem: jest.fn(),
@@ -147,7 +152,15 @@ describe('ProductCard', () => {
     render(<ProductCard product={mockProduct} />)
 
     const addToCartButton = screen.getByRole('button', { name: /add to cart/i })
-    expect(addToCartButton).toBeDisabled()
+    
+    // Click the button
+    fireEvent.click(addToCartButton)
+    
+    // Button should show "Adding..." text
+    expect(screen.getByText('Adding...')).toBeInTheDocument()
+    
+    // Wait for the promise to resolve
+    await addToCartPromise
   })
 
   it('should disable add to cart when out of stock', () => {

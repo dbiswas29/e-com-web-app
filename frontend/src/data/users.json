@@ -1,0 +1,44 @@
+{
+  "users": [
+    {
+      "id": "local-user-1",
+      "email": "admin@ecommerce.com",
+      "password": "admin123",
+      "firstName": "Admin",
+      "lastName": "User",
+      "role": "ADMIN",
+      "createdAt": "2025-07-23T07:44:37.678Z",
+      "updatedAt": "2025-07-23T07:44:37.678Z"
+    },
+    {
+      "id": "local-user-2",
+      "email": "user@test.com",
+      "password": "password123",
+      "firstName": "Test",
+      "lastName": "User",
+      "role": "USER",
+      "createdAt": "2025-07-23T07:44:37.678Z",
+      "updatedAt": "2025-07-23T07:44:37.678Z"
+    },
+    {
+      "id": "local-user-3",
+      "email": "john@example.com",
+      "password": "john123",
+      "firstName": "John",
+      "lastName": "Doe",
+      "role": "USER",
+      "createdAt": "2025-07-23T07:44:37.678Z",
+      "updatedAt": "2025-07-23T07:44:37.678Z"
+    },
+    {
+      "id": "local-user-4",
+      "email": "jane@example.com",
+      "password": "jane123",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "role": "USER",
+      "createdAt": "2025-07-23T07:44:37.678Z",
+      "updatedAt": "2025-07-23T07:44:37.678Z"
+    }
+  ]
+}

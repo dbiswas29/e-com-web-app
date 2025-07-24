@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Product, CartItem, Cart } from '@/types';
-import { apiClient } from '@/lib/api';
+import { localCartService } from '@/lib/localCartService';
 import toast from 'react-hot-toast';
 
 interface CartState {
@@ -10,7 +10,7 @@ interface CartState {
   addToCart: (productId: string, quantity?: number) => Promise<void>;
   removeFromCart: (itemId: string) => Promise<void>;
   updateCartItem: (itemId: string, quantity: number) => Promise<void>;
-  clearCart: () => void;
+  clearCart: () => Promise<void>;
   fetchCart: () => Promise<void>;
   getTotalItems: () => number;
   getTotalPrice: () => number;
@@ -25,20 +25,22 @@ export const useCartStore = create<CartState>()(
       addToCart: async (productId: string, quantity = 1) => {
         set({ isLoading: true });
         try {
-          const response = await apiClient.post<Cart>('/cart/add', {
-            productId,
-            quantity,
-          });
+          const result = await localCartService.addToCart(productId, quantity);
 
-          set({
-            cart: response.data,
-            isLoading: false,
-          });
-
-          toast.success('Item added to cart!');
+          if (result.success) {
+            set({
+              cart: result.cart,
+              isLoading: false,
+            });
+            toast.success(result.message || 'Item added to cart!');
+          } else {
+            set({ isLoading: false });
+            toast.error(result.message || 'Failed to add item to cart');
+            throw new Error(result.message);
+          }
         } catch (error: any) {
           set({ isLoading: false });
-          toast.error(error.response?.data?.message || 'Failed to add item to cart');
+          toast.error(error.message || 'Failed to add item to cart');
           throw error;
         }
       },
@@ -46,27 +48,22 @@ export const useCartStore = create<CartState>()(
       removeFromCart: async (itemId: string) => {
         set({ isLoading: true });
         try {
-          await apiClient.delete(`/cart/remove/${itemId}`);
+          const result = await localCartService.removeFromCart(itemId);
           
-          const { cart } = get();
-          if (cart) {
-            const updatedCart = {
-              ...cart,
-              items: cart.items.filter(item => item.id !== itemId),
-            };
-            updatedCart.totalItems = updatedCart.items.reduce((sum, item) => sum + item.quantity, 0);
-            updatedCart.totalPrice = updatedCart.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-
+          if (result.success) {
             set({
-              cart: updatedCart,
+              cart: result.cart,
               isLoading: false,
             });
+            toast.success(result.message || 'Item removed from cart!');
+          } else {
+            set({ isLoading: false });
+            toast.error(result.message || 'Failed to remove item from cart');
+            throw new Error(result.message);
           }
-
-          toast.success('Item removed from cart!');
         } catch (error: any) {
           set({ isLoading: false });
-          toast.error(error.response?.data?.message || 'Failed to remove item from cart');
+          toast.error(error.message || 'Failed to remove item from cart');
           throw error;
         }
       },
@@ -78,42 +75,51 @@ export const useCartStore = create<CartState>()(
 
         set({ isLoading: true });
         try {
-          const response = await apiClient.put<Cart>('/cart/update', {
-            itemId,
-            quantity,
-          });
+          const result = await localCartService.updateCartItem(itemId, quantity);
 
-          set({
-            cart: response.data,
-            isLoading: false,
-          });
-
-          toast.success('Cart updated!');
+          if (result.success) {
+            set({
+              cart: result.cart,
+              isLoading: false,
+            });
+            toast.success(result.message || 'Cart updated!');
+          } else {
+            set({ isLoading: false });
+            toast.error(result.message || 'Failed to update cart');
+            throw new Error(result.message);
+          }
         } catch (error: any) {
           set({ isLoading: false });
-          toast.error(error.response?.data?.message || 'Failed to update cart');
+          toast.error(error.message || 'Failed to update cart');
           throw error;
         }
       },
 
-      clearCart: () => {
-        set({ cart: null });
+      clearCart: async () => {
+        try {
+          const result = await localCartService.clearCart();
+          if (result.success) {
+            set({ cart: result.cart });
+            toast.success(result.message || 'Cart cleared!');
+          } else {
+            toast.error(result.message || 'Failed to clear cart');
+          }
+        } catch (error: any) {
+          toast.error(error.message || 'Failed to clear cart');
+        }
       },
 
       fetchCart: async () => {
         set({ isLoading: true });
         try {
-          const response = await apiClient.get<Cart>('/cart');
+          const cart = await localCartService.getCart();
           set({
-            cart: response.data,
+            cart,
             isLoading: false,
           });
         } catch (error: any) {
           set({ isLoading: false });
-          // Don't show error toast for 404 (empty cart)
-          if (error.response?.status !== 404) {
-            console.error('Failed to fetch cart:', error);
-          }
+          console.error('Failed to fetch cart:', error);
         }
       },
 
