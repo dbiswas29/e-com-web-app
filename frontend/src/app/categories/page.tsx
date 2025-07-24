@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { apiClient } from '@/lib/api';
 import { Product } from '@/types';
 
@@ -15,10 +16,8 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<CategoryGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     fetchCategories();
   }, []);
 
@@ -26,38 +25,17 @@ export default function CategoriesPage() {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('🔥 fetchCategories called');
       
-      // Test 1: Direct fetch
-      console.log('🔥 Testing direct fetch...');
-      const directResponse = await fetch('http://localhost:3001/api/products');
-      console.log('🔥 Direct fetch response status:', directResponse.status);
-      
-      if (!directResponse.ok) {
-        throw new Error(`Direct fetch failed with status: ${directResponse.status}`);
-      }
-      
-      const directData = await directResponse.json();
-      console.log('🔥 Direct fetch SUCCESS - received products:', directData?.data?.length || 0);
-      
-      // Test 2: API client
-      console.log('🔥 Testing API client...');
       const response = await apiClient.get<{ data: Product[]; total: number; page: number; limit: number; totalPages: number }>('/products');
-      console.log('🔥 API client SUCCESS - response data type:', typeof response.data);
-      console.log('🔥 API client response keys:', Object.keys(response.data || {}));
-      
-      const responseData = response.data as { data: Product[]; total: number; page: number; limit: number; totalPages: number };
-      const products = responseData.data; // API wraps products in data property
-      console.log('🔥 Products extracted:', products?.length || 0);
+      const products = response.data.data;
 
       if (!products || !Array.isArray(products)) {
-        throw new Error(`Expected products array, got: ${typeof products}`);
+        throw new Error('Invalid products data received');
       }
 
       // Group products by category
       const categoryMap = new Map<string, Product[]>();
-      products.forEach((product, index) => {
-        console.log(`🔥 Processing product ${index}: ${product.name} - ${product.category}`);
+      products.forEach((product) => {
         if (!categoryMap.has(product.category)) {
           categoryMap.set(product.category, []);
         }
@@ -70,26 +48,17 @@ export default function CategoriesPage() {
         count: categoryProducts.length,
         products: categoryProducts,
       }));
-
-      console.log('🔥 SUCCESS - Category groups created:', categoryGroups.length);
-      categoryGroups.forEach(group => {
-        console.log(`🔥 Category: ${group.category} (${group.count} products)`);
-      });
       
       setCategories(categoryGroups);
     } catch (error) {
-      console.error('🔥 ERROR in fetchCategories:', error);
-      if (error instanceof Error) {
-        console.error('🔥 Error message:', error.message);
-        console.error('🔥 Error stack:', error.stack);
-      }
-      setError(`Failed to load categories: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error fetching categories:', error);
+      setError('Failed to load categories');
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!mounted || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-width-container container-padding py-8">
@@ -117,6 +86,7 @@ export default function CategoriesPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Categories</h2>
           <p className="text-gray-600 mb-8">{error}</p>
           <button
+            type="button"
             onClick={fetchCategories}
             className="btn-primary"
           >
@@ -150,16 +120,14 @@ export default function CategoriesPage() {
               className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
             >
               <div className="relative h-64 overflow-hidden">
-                <div className="w-full h-full bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 group-hover:from-primary-600 group-hover:to-primary-800 transition-all duration-300 flex items-center justify-center">
-                  <div className="text-white text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white">
-                        {mounted ? categoryGroup.category.substring(0, 2).toUpperCase() : '..'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute inset-0 bg-black bg-opacity-10 group-hover:bg-opacity-20 transition-opacity"></div>
+                <Image
+                  src={categoryGroup.products[0]?.imageUrl || 'https://images.unsplash.com/photo-1486401899868-0e435ed85128?w=400&h=400&fit=crop'}
+                  alt={categoryGroup.category}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-40 transition-opacity"></div>
                 <div className="absolute bottom-4 left-4 text-white">
                   <h3 className="text-2xl font-bold mb-1">
                     {categoryGroup.category}
@@ -210,10 +178,14 @@ export default function CategoriesPage() {
                 href={`/products?category=${encodeURIComponent(categoryGroup.category)}`}
                 className="group text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
               >
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center group-hover:from-primary-600 group-hover:to-primary-800 transition-all">
-                  <span className="text-white font-bold text-lg">
-                    {mounted ? categoryGroup.category.substring(0, 2).toUpperCase() : '..'}
-                  </span>
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full overflow-hidden relative">
+                  <Image
+                    src={categoryGroup.products[0]?.imageUrl || 'https://images.unsplash.com/photo-1486401899868-0e435ed85128?w=100&h=100&fit=crop'}
+                    alt={categoryGroup.category}
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                  />
                 </div>
                 <h3 className="font-medium text-gray-900 group-hover:text-primary-600 transition-colors">
                   {categoryGroup.category}

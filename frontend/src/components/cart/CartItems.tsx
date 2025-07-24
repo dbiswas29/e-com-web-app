@@ -2,15 +2,46 @@
 
 import { useEffect } from 'react';
 import { useCartStore } from '@/store/cartStore';
+import { useAuthStore } from '@/store/authStore';
 import { MinusIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
 export function CartItems() {
-  const { cart, isLoading, fetchCart, updateCartItem, removeFromCart } = useCartStore();
+  const { cart, isLoading, fetchCart, updateCartItem, removeFromCart, isCartItemLoading } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
+    if (isAuthenticated) {
+      fetchCart();
+    }
+  }, [fetchCart, isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="space-y-4">
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold mb-4">Cart Items</h2>
+          <div className="text-center py-12">
+            <div className="w-24 h-24 mx-auto mb-6 text-gray-300">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <p className="text-gray-500 text-lg font-medium">Please login to view your cart</p>
+            <p className="text-sm text-gray-400 mt-2 mb-6">
+              Sign in to access your saved items and continue shopping
+            </p>
+            <Link 
+              href="/auth/login" 
+              className="btn-primary inline-flex items-center"
+            >
+              Login
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -84,8 +115,11 @@ export function CartItems() {
         <h2 className="text-xl font-semibold mb-6">Cart Items ({cart.totalItems})</h2>
         
         <div className="space-y-6">
-          {cart.items.map((item) => (
-            <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
+          {cart.items.map((item) => {
+            const itemLoading = isCartItemLoading(item.id);
+            
+            return (
+              <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
               {/* Product Image */}
               <div className="flex-shrink-0">
                 <img
@@ -111,8 +145,9 @@ export function CartItems() {
               {/* Quantity Controls */}
               <div className="flex items-center space-x-3">
                 <button
+                  type="button"
                   onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                  disabled={isLoading}
+                  disabled={itemLoading}
                   className="p-1 rounded-full border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
                 >
                   <MinusIcon className="w-4 h-4" />
@@ -123,8 +158,9 @@ export function CartItems() {
                 </span>
                 
                 <button
+                  type="button"
                   onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                  disabled={isLoading}
+                  disabled={itemLoading}
                   className="p-1 rounded-full border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
                 >
                   <PlusIcon className="w-4 h-4" />
@@ -140,15 +176,17 @@ export function CartItems() {
 
               {/* Remove Button */}
               <button
+                type="button"
                 onClick={() => handleRemoveItem(item.id)}
-                disabled={isLoading}
+                disabled={itemLoading}
                 className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full disabled:opacity-50"
                 title="Remove item"
               >
                 <TrashIcon className="w-5 h-5" />
               </button>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

@@ -7,6 +7,8 @@ import toast from 'react-hot-toast';
 interface CartState {
   cart: Cart | null;
   isLoading: boolean;
+  loadingItems: Set<string>; // Track loading state per product/item
+  loadingCartItems: Set<string>; // Track loading state per cart item (for quantity changes/removal)
   addToCart: (productId: string, quantity?: number) => Promise<void>;
   removeFromCart: (itemId: string) => Promise<void>;
   updateCartItem: (itemId: string, quantity: number) => Promise<void>;
@@ -14,6 +16,8 @@ interface CartState {
   fetchCart: () => Promise<void>;
   getTotalItems: () => number;
   getTotalPrice: () => number;
+  isItemLoading: (productId: string) => boolean;
+  isCartItemLoading: (cartItemId: string) => boolean;
 }
 
 export const useCartStore = create<CartState>()(
@@ -21,30 +25,53 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       cart: null,
       isLoading: false,
+      loadingItems: new Set<string>(),
+      loadingCartItems: new Set<string>(),
+
+      isItemLoading: (productId: string) => {
+        return get().loadingItems.has(productId);
+      },
+
+      isCartItemLoading: (cartItemId: string) => {
+        return get().loadingCartItems.has(cartItemId);
+      },
 
       addToCart: async (productId: string, quantity = 1) => {
-        set({ isLoading: true });
+        const { loadingItems } = get();
+        const newLoadingItems = new Set(loadingItems);
+        newLoadingItems.add(productId);
+        set({ loadingItems: newLoadingItems });
+        
         try {
           const response = await apiClient.post<Cart>('/cart/add', {
             productId,
             quantity,
           });
 
+          const finalLoadingItems = new Set(get().loadingItems);
+          finalLoadingItems.delete(productId);
+          
           set({
             cart: response.data,
-            isLoading: false,
+            loadingItems: finalLoadingItems,
           });
 
           toast.success('Item added to cart!');
         } catch (error: any) {
-          set({ isLoading: false });
+          const finalLoadingItems = new Set(get().loadingItems);
+          finalLoadingItems.delete(productId);
+          set({ loadingItems: finalLoadingItems });
           toast.error(error.response?.data?.message || 'Failed to add item to cart');
           throw error;
         }
       },
 
       removeFromCart: async (itemId: string) => {
-        set({ isLoading: true });
+        const { loadingCartItems } = get();
+        const newLoadingCartItems = new Set(loadingCartItems);
+        newLoadingCartItems.add(itemId);
+        set({ loadingCartItems: newLoadingCartItems });
+
         try {
           await apiClient.delete(`/cart/remove/${itemId}`);
           
@@ -57,15 +84,20 @@ export const useCartStore = create<CartState>()(
             updatedCart.totalItems = updatedCart.items.reduce((sum, item) => sum + item.quantity, 0);
             updatedCart.totalPrice = updatedCart.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
 
+            const finalLoadingCartItems = new Set(get().loadingCartItems);
+            finalLoadingCartItems.delete(itemId);
+
             set({
               cart: updatedCart,
-              isLoading: false,
+              loadingCartItems: finalLoadingCartItems,
             });
           }
 
           toast.success('Item removed from cart!');
         } catch (error: any) {
-          set({ isLoading: false });
+          const finalLoadingCartItems = new Set(get().loadingCartItems);
+          finalLoadingCartItems.delete(itemId);
+          set({ loadingCartItems: finalLoadingCartItems });
           toast.error(error.response?.data?.message || 'Failed to remove item from cart');
           throw error;
         }
@@ -76,28 +108,41 @@ export const useCartStore = create<CartState>()(
           return get().removeFromCart(itemId);
         }
 
-        set({ isLoading: true });
+        const { loadingCartItems } = get();
+        const newLoadingCartItems = new Set(loadingCartItems);
+        newLoadingCartItems.add(itemId);
+        set({ loadingCartItems: newLoadingCartItems });
+
         try {
           const response = await apiClient.put<Cart>('/cart/update', {
             itemId,
             quantity,
           });
 
+          const finalLoadingCartItems = new Set(get().loadingCartItems);
+          finalLoadingCartItems.delete(itemId);
+
           set({
             cart: response.data,
-            isLoading: false,
+            loadingCartItems: finalLoadingCartItems,
           });
 
           toast.success('Cart updated!');
         } catch (error: any) {
-          set({ isLoading: false });
+          const finalLoadingCartItems = new Set(get().loadingCartItems);
+          finalLoadingCartItems.delete(itemId);
+          set({ loadingCartItems: finalLoadingCartItems });
           toast.error(error.response?.data?.message || 'Failed to update cart');
           throw error;
         }
       },
 
       clearCart: () => {
-        set({ cart: null });
+        set({ 
+          cart: null,
+          loadingItems: new Set<string>(),
+          loadingCartItems: new Set<string>()
+        });
       },
 
       fetchCart: async () => {
@@ -130,7 +175,11 @@ export const useCartStore = create<CartState>()(
     {
       name: 'cart-storage',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ cart: state.cart }),
+      partialize: (state) => {
+        // Only persist cart if user might be authenticated
+        // We'll clear this on logout anyway, but this prevents stale data
+        return { cart: state.cart };
+      },
     }
   )
 );

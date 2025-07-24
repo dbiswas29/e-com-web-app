@@ -12,7 +12,7 @@ export function FeaturedProducts() {
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
       try {
-        const response = await apiClient.get<{ data: Product[] }>('/products?limit=4&featured=true');
+        const response = await apiClient.get<{ data: Product[] }>('/products?limit=4');
         setProducts(response.data.data);
       } catch (error) {
         console.error('Failed to fetch featured products:', error);

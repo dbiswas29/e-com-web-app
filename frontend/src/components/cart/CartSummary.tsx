@@ -1,9 +1,11 @@
 'use client';
 
 import { useCartStore } from '@/store/cartStore';
+import { useAuthStore } from '@/store/authStore';
 
 export function CartSummary() {
   const { cart, getTotalItems, getTotalPrice } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
 
   const subtotal = getTotalPrice();
   const shipping = subtotal >= 50 ? 0 : subtotal > 0 ? 5.99 : 0;
@@ -11,7 +13,21 @@ export function CartSummary() {
   const total = subtotal + shipping + tax;
 
   const itemCount = getTotalItems();
-  const hasItems = itemCount > 0;
+  const hasItems = itemCount > 0 && isAuthenticated;
+
+  if (!isAuthenticated) {
+    return (
+      <div className="card p-6 sticky top-4">
+        <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+        <div className="text-center py-8">
+          <p className="text-gray-500 mb-4">Please login to view your order summary</p>
+          <div className="text-gray-400 text-sm">
+            Sign in to see your cart total and proceed to checkout
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="card p-6 sticky top-4">
