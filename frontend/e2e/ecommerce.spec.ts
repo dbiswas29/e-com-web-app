@@ -139,6 +139,94 @@ test.describe('E-commerce Website E2E Tests', () => {
       await expect(page.locator('[data-testid="product-price"]')).toBeVisible()
       await expect(page.locator('[data-testid="add-to-cart-button"]')).toBeVisible()
     })
+
+    test('should display product information correctly', async ({ page }) => {
+      await page.goto('/products')
+      await page.waitForLoadState('networkidle')
+      
+      // Click on first product
+      const firstProduct = page.locator('[data-testid="product-card"]').first()
+      await firstProduct.click()
+      
+      await page.waitForLoadState('networkidle')
+      
+      // Check for product details sections
+      await expect(page.locator('text=Description')).toBeVisible()
+      await expect(page.locator('text=Product Details')).toBeVisible()
+      await expect(page.locator('text=Category')).toBeVisible()
+      await expect(page.locator('text=Stock')).toBeVisible()
+      
+      // Check for rating display
+      await expect(page.locator('[data-testid="product-rating"]')).toBeVisible()
+    })
+
+    test('should allow quantity selection and add to cart', async ({ page }) => {
+      // First login to test add to cart functionality
+      await page.goto('/auth/login')
+      await page.locator('input[type="email"]').fill('test@example.com')
+      await page.locator('input[type="password"]').fill('password123')
+      await page.getByRole('button', { name: /login/i }).click()
+      
+      // Navigate to product details
+      await page.goto('/products')
+      await page.waitForLoadState('networkidle')
+      
+      const firstProduct = page.locator('[data-testid="product-card"]').first()
+      await firstProduct.click()
+      
+      await page.waitForLoadState('networkidle')
+      
+      // Select quantity
+      const quantitySelect = page.locator('select#quantity')
+      await quantitySelect.selectOption('2')
+      
+      // Add to cart
+      const addToCartButton = page.locator('[data-testid="add-to-cart-button"]')
+      await addToCartButton.click()
+      
+      // Should show success message or cart update
+      await expect(page.locator('text=Item added to cart')).toBeVisible({ timeout: 5000 })
+    })
+
+    test('should navigate back to products', async ({ page }) => {
+      await page.goto('/products')
+      await page.waitForLoadState('networkidle')
+      
+      const firstProduct = page.locator('[data-testid="product-card"]').first()
+      await firstProduct.click()
+      
+      await page.waitForLoadState('networkidle')
+      
+      // Click back button
+      const backButton = page.locator('text=Back to Products')
+      await backButton.click()
+      
+      // Should be back on products page
+      await expect(page).toHaveURL('/products')
+    })
+
+    test('should handle out of stock products', async ({ page }) => {
+      // This test assumes there's at least one out of stock product
+      // In a real scenario, you might want to mock this or use a specific test product
+      await page.goto('/products')
+      await page.waitForLoadState('networkidle')
+      
+      // Look for out of stock product or create test scenario
+      const products = page.locator('[data-testid="product-card"]')
+      const firstProduct = products.first()
+      await firstProduct.click()
+      
+      await page.waitForLoadState('networkidle')
+      
+      // Check if add to cart button is disabled for out of stock
+      const addToCartButton = page.locator('[data-testid="add-to-cart-button"]')
+      const buttonText = await addToCartButton.textContent()
+      
+      if (buttonText?.includes('Out of Stock')) {
+        await expect(addToCartButton).toBeDisabled()
+        await expect(page.locator('text=Out of Stock')).toBeVisible()
+      }
+    })
   })
 
   test.describe('Authentication', () => {

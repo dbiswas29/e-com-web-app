@@ -13,6 +13,7 @@ export interface Product {
   description: string;
   price: number;
   imageUrl: string;
+  images: string[];
   category: string;
   stock: number;
   rating: number;

@@ -35,6 +35,7 @@ describe('ProductCard', () => {
     name: 'Test Product',
     price: 99.99,
     imageUrl: '/test-image.jpg',
+    images: ['/test-image.jpg', '/test-image-2.jpg', '/test-image-3.jpg'],
     description: 'Test product description',
     category: 'electronics',
     rating: 4.5,

@@ -33,7 +33,8 @@ model Product {
   name        String
   description String
   price       Float
-  imageUrl    String
+  imageUrl    String   // Primary image URL
+  images      String   // JSON array of image URLs
   category    String
   stock       Int      @default(0)
   rating      Float    @default(0)

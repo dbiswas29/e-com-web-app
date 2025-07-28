@@ -47,6 +47,7 @@ describe('ProductsService', () => {
         category: 'electronics',
         isActive: true,
         features: '["feature1", "feature2"]',
+        images: '[]',
         createdAt: new Date(),
       },
     ];
@@ -62,6 +63,7 @@ describe('ProductsService', () => {
           {
             ...mockProducts[0],
             features: ['feature1', 'feature2'],
+            images: [],
           },
         ],
         total: 1,
@@ -178,6 +180,7 @@ describe('ProductsService', () => {
       category: 'electronics',
       isActive: true,
       features: '["feature1", "feature2"]',
+      images: '[]',
       createdAt: new Date(),
     };
 
@@ -189,6 +192,7 @@ describe('ProductsService', () => {
       expect(result).toEqual({
         ...mockProduct,
         features: ['feature1', 'feature2'],
+        images: [],
       });
 
       expect(mockPrismaService.product.findUnique).toHaveBeenCalledWith({
@@ -213,6 +217,7 @@ describe('ProductsService', () => {
         category: 'electronics',
         isActive: true,
         features: '[]',
+        images: '[]',
         createdAt: new Date(),
       },
     ];
@@ -226,6 +231,7 @@ describe('ProductsService', () => {
         {
           ...mockProducts[0],
           features: [],
+          images: [],
         },
       ]);
 
