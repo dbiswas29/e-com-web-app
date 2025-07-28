@@ -56,6 +56,7 @@ export class ProductsService {
       data: products.map(product => ({
         ...product,
         features: JSON.parse(product.features || '[]'),
+        images: JSON.parse((product as any).images || '[]'),
       })),
       total,
       page: Math.floor(skip / take) + 1,
@@ -76,6 +77,7 @@ export class ProductsService {
     return {
       ...product,
       features: JSON.parse(product.features || '[]'),
+      images: JSON.parse((product as any).images || '[]'),
     };
   }
 
@@ -91,6 +93,25 @@ export class ProductsService {
     return products.map(product => ({
       ...product,
       features: JSON.parse(product.features || '[]'),
+      images: JSON.parse((product as any).images || '[]'),
+    }));
+  }
+
+  async findRelatedProducts(productId: string, category: string, limit = 4) {
+    const products = await this.prisma.product.findMany({
+      where: {
+        category,
+        isActive: true,
+        id: { not: productId }, // Exclude the current product
+      },
+      take: limit,
+      orderBy: { rating: 'desc' }, // Order by rating to get best related products
+    });
+
+    return products.map(product => ({
+      ...product,
+      features: JSON.parse(product.features || '[]'),
+      images: JSON.parse((product as any).images || '[]'),
     }));
   }
 }

@@ -55,6 +55,16 @@ export class ProductsController {
     return this.productsService.findByCategory(category);
   }
 
+  @Get(':id/related')
+  @ApiOperation({ summary: 'Get related products' })
+  async findRelatedProducts(@Param('id') id: string) {
+    const product = await this.productsService.findOne(id);
+    if (!product) {
+      throw new Error('Product not found');
+    }
+    return this.productsService.findRelatedProducts(id, product.category);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get product by ID' })
   async findOne(@Param('id') id: string) {

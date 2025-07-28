@@ -29,7 +29,10 @@ A full-stack e-commerce web application built with Next.js frontend and NestJS b
 │   ├── src/
 │   │   ├── app/             # Next.js 14 App Router pages
 │   │   │   ├── page.tsx     # Homepage
-│   │   │   ├── products/    # Product listing page
+│   │   │   ├── products/    # Product listing and details
+│   │   │   │   ├── page.tsx     # Product listing page
+│   │   │   │   └── [id]/        # Dynamic product details
+│   │   │   │       └── page.tsx # Individual product page
 │   │   │   └── cart/        # Shopping cart page
 │   │   ├── components/      # Reusable components
 │   │   │   ├── layout/      # Header, Footer
@@ -149,8 +152,23 @@ The application uses SQLite with the following main entities:
 - **ProductCard**: Reusable product display component
 - **ProductsGrid**: Product listing with pagination
 - **ProductFilters**: Search and filter functionality
+- **ProductDetails**: Individual product page with full details
 - **CartItems**: Shopping cart item management
 - **CartSummary**: Order total and checkout
+
+### Pages
+- **Homepage** (`/`): Hero section, featured products, categories
+- **Products Listing** (`/products`): Filterable product grid with pagination
+- **Product Details** (`/products/[id]`): Individual product information with:
+  - High-resolution product images with thumbnail gallery
+  - Detailed product information and features
+  - Customer ratings and reviews count
+  - Stock status and availability
+  - Quantity selection and add to cart functionality
+  - Category linking and product specifications
+  - Responsive design for all device sizes
+- **Shopping Cart** (`/cart`): Cart management and checkout
+- **Categories** (`/categories`): Product category overview
 
 ### State Management
 - **authStore**: User authentication state
