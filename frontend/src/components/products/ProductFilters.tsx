@@ -2,83 +2,45 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { apiClient } from '@/lib/api';
+import { Category } from '@/types';
 
-interface Category {
-  category: string;
-  count: number;
+interface ProductFiltersProps {
+  categories: Category[];
 }
 
-export function ProductFilters() {
+export function ProductFilters({ categories }: ProductFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [minPrice, setMinPrice] = useState<string>('');
-  const [maxPrice, setMaxPrice] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
+  
+  // Initialize price values from URL parameters
+  const [minPrice, setMinPrice] = useState<string>(searchParams?.get('minPrice') || '');
+  const [maxPrice, setMaxPrice] = useState<string>(searchParams?.get('maxPrice') || '');
 
-  // Initialize filters from URL params
+  // Get current filters from URL
+  const categoriesParam = searchParams?.get('categories') || '';
+  const currentCategory = searchParams?.get('category') || ''; // Legacy support
+  
+  // Update price inputs when URL changes
   useEffect(() => {
-    setMounted(true);
-    const categoriesParam = searchParams?.get('categories') || '';
-    const categoryParam = searchParams?.get('category') || ''; // Legacy support
-    const min = searchParams?.get('minPrice') || '';
-    const max = searchParams?.get('maxPrice') || '';
-    
-    // Support both new 'categories' param and legacy 'category' param
-    let selectedCats: string[] = [];
-    if (categoriesParam) {
-      selectedCats = categoriesParam.split(',').filter(cat => cat.trim());
-    } else if (categoryParam) {
-      selectedCats = [categoryParam];
-    }
-    
-    setSelectedCategories(selectedCats);
-    setMinPrice(min);
-    setMaxPrice(max);
-    
-    fetchCategories();
+    setMinPrice(searchParams?.get('minPrice') || '');
+    setMaxPrice(searchParams?.get('maxPrice') || '');
   }, [searchParams]);
+  
+  // Parse selected categories from URL
+  const selectedCategories = categoriesParam 
+    ? categoriesParam.split(',').filter(cat => cat.trim()) 
+    : currentCategory 
+      ? [currentCategory] 
+      : [];
 
-  const fetchCategories = async () => {
-    try {
-      setIsLoading(true);
-      const response = await apiClient.get<{ data: any[]; total: number }>('/products');
-      const products = response.data.data;
-
-      // Group products by category to get counts
-      const categoryMap = new Map<string, number>();
-      products.forEach(product => {
-        const count = categoryMap.get(product.category) || 0;
-        categoryMap.set(product.category, count + 1);
-      });
-
-      const categoryList: Category[] = Array.from(categoryMap.entries()).map(([category, count]) => ({
-        category,
-        count,
-      }));
-
-      setCategories(categoryList);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateURL = (newParams: Record<string, string | null>) => {
-    if (!mounted) return;
-    
+  const updateUrl = (newParams: Record<string, string>) => {
     const current = new URLSearchParams(Array.from(searchParams?.entries() || []));
     
-    Object.keys(newParams).forEach((key) => {
-      const value = newParams[key];
-      if (value === null || value === '') {
-        current.delete(key);
-      } else {
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value) {
         current.set(key, value);
+      } else {
+        current.delete(key);
       }
     });
 
@@ -87,195 +49,113 @@ export function ProductFilters() {
     router.push(`/products${query}`);
   };
 
-  const handleCategoryChange = (category: string) => {
-    const newSelectedCategories = selectedCategories.includes(category)
-      ? selectedCategories.filter(cat => cat !== category)
-      : [...selectedCategories, category];
+  const handleCategoryFilter = (categoryName: string) => {
+    const newSelectedCategories = selectedCategories.includes(categoryName)
+      ? selectedCategories.filter(cat => cat !== categoryName)
+      : [...selectedCategories, categoryName];
     
-    setSelectedCategories(newSelectedCategories);
+    // Remove legacy single category param and use categories param
+    const newParams: Record<string, string> = {
+      page: '1', // Reset to first page
+    };
     
-    // Update URL with new categories
-    const categoriesParam = newSelectedCategories.length > 0 
-      ? newSelectedCategories.join(',') 
-      : null;
+    // Remove single category parameter
+    newParams.category = '';
     
-    updateURL({ 
-      categories: categoriesParam,
-      category: null  // Remove legacy single category param
-    });
+    if (newSelectedCategories.length > 0) {
+      newParams.categories = newSelectedCategories.join(',');
+    } else {
+      newParams.categories = '';
+    }
+    
+    updateUrl(newParams);
   };
 
   const handlePriceFilter = () => {
-    updateURL({ 
-      minPrice: minPrice || null,
-      maxPrice: maxPrice || null
+    updateUrl({
+      minPrice,
+      maxPrice,
+      page: '1', // Reset to first page
     });
   };
 
   const clearFilters = () => {
-    setSelectedCategories([]);
     setMinPrice('');
     setMaxPrice('');
+    // Clear all filter parameters
     router.push('/products');
   };
 
-  const hasActiveFilters = mounted && (selectedCategories.length > 0 || minPrice || maxPrice);
-
-  // Don't render dynamic content until mounted
-  if (!mounted) {
-    return (
-      <div className="space-y-6">
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold mb-4">Categories</h3>
-          <div className="space-y-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold mb-4">Price Range</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Min Price</label>
-              <div className="h-10 bg-gray-300 rounded animate-pulse"></div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Max Price</label>
-              <div className="h-10 bg-gray-300 rounded animate-pulse"></div>
-            </div>
-            <div className="h-10 bg-gray-300 rounded animate-pulse"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {/* Clear Filters */}
-      {hasActiveFilters && (
-        <div className="card p-4">
-          <button 
-            onClick={clearFilters}
-            className="btn-secondary w-full text-sm"
-          >
-            Clear All Filters
-          </button>
-        </div>
-      )}
-
       {/* Categories */}
-      <div className="card p-6">
-        <h3 className="text-lg font-semibold mb-4">Categories</h3>
-        {isLoading ? (
-          <div className="space-y-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {categories.map(({ category, count }) => (
-              <label key={category} className="flex items-center justify-between cursor-pointer">
-                <div className="flex items-center">
-                  <input 
-                    type="checkbox" 
-                    className="mr-2"
-                    checked={mounted ? selectedCategories.indexOf(category) !== -1 : false}
-                    onChange={() => handleCategoryChange(category)}
-                  />
-                  <span className="text-sm">{category}</span>
-                </div>
-                <span className="text-xs text-gray-500">({count})</span>
-              </label>
-            ))}
-          </div>
-        )}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">Categories</h3>
+        <div className="space-y-2">
+          {categories.map((category) => (
+            <label key={category.id} className="flex items-center">
+              <input
+                type="checkbox"
+                checked={selectedCategories.includes(category.name)}
+                onChange={() => handleCategoryFilter(category.name)}
+                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">
+                {category.name}
+                {category.productCount && (
+                  <span className="text-gray-500 ml-1">({category.productCount})</span>
+                )}
+              </span>
+            </label>
+          ))}
+        </div>
       </div>
 
       {/* Price Range */}
-      <div className="card p-6">
-        <h3 className="text-lg font-semibold mb-4">Price Range</h3>
-        <div className="space-y-4">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">Price Range</h3>
+        <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium mb-1">Min Price</label>
-            <input 
-              type="number" 
-              className="input" 
-              placeholder="$0"
-              value={mounted ? minPrice : ''}
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Min Price
+            </label>
+            <input
+              type="number"
+              value={minPrice}
               onChange={(e) => setMinPrice(e.target.value)}
+              placeholder="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Max Price</label>
-            <input 
-              type="number" 
-              className="input" 
-              placeholder="$1000"
-              value={mounted ? maxPrice : ''}
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Max Price
+            </label>
+            <input
+              type="number"
+              value={maxPrice}
               onChange={(e) => setMaxPrice(e.target.value)}
+              placeholder="1000"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
-          <button 
-            className="btn-primary w-full"
+          <button
             onClick={handlePriceFilter}
+            className="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             Apply Price Filter
           </button>
         </div>
       </div>
 
-      {/* Quick Price Filters */}
-      <div className="card p-6">
-        <h3 className="text-lg font-semibold mb-4">Quick Filters</h3>
-        <div className="space-y-2">
-          <button 
-            className="w-full text-left text-sm p-2 rounded hover:bg-gray-100"
-            onClick={() => {
-              setMinPrice('');
-              setMaxPrice('25');
-              updateURL({ minPrice: null, maxPrice: '25' });
-            }}
-          >
-            Under $25
-          </button>
-          <button 
-            className="w-full text-left text-sm p-2 rounded hover:bg-gray-100"
-            onClick={() => {
-              setMinPrice('25');
-              setMaxPrice('50');
-              updateURL({ minPrice: '25', maxPrice: '50' });
-            }}
-          >
-            $25 - $50
-          </button>
-          <button 
-            className="w-full text-left text-sm p-2 rounded hover:bg-gray-100"
-            onClick={() => {
-              setMinPrice('50');
-              setMaxPrice('100');
-              updateURL({ minPrice: '50', maxPrice: '100' });
-            }}
-          >
-            $50 - $100
-          </button>
-          <button 
-            className="w-full text-left text-sm p-2 rounded hover:bg-gray-100"
-            onClick={() => {
-              setMinPrice('100');
-              setMaxPrice('');
-              updateURL({ minPrice: '100', maxPrice: null });
-            }}
-          >
-            Over $100
-          </button>
-        </div>
+      {/* Clear Filters */}
+      <div>
+        <button
+          onClick={clearFilters}
+          className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+          Clear All Filters
+        </button>
       </div>
     </div>
   );

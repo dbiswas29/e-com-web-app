@@ -84,4 +84,60 @@
   .max-width-container {
     @apply mx-auto max-w-7xl;
   }
+
+  /* Animation utilities */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+    opacity: 0;
+  }
+
+  /* Category image utilities for consistent sizing */
+  .category-image-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    min-height: 200px;
+    overflow: hidden;
+  }
+
+  .category-image-container img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  /* Responsive category sizing */
+  @media (min-width: 640px) {
+    .category-image-container {
+      min-height: 220px;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .category-image-container {
+      min-height: 240px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .category-image-container {
+      min-height: 260px;
+      max-height: 260px;
+    }
+  }
 }

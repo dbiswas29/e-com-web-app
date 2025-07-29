@@ -1,30 +1,12 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { apiClient } from '@/lib/api';
 import { Product } from '@/types';
 import { ProductCard } from '@/components/products/ProductCard';
 
-export function FeaturedProducts() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+interface FeaturedProductsProps {
+  products: Product[];
+}
 
-  useEffect(() => {
-    const fetchFeaturedProducts = async () => {
-      try {
-        const response = await apiClient.get<{ data: Product[] }>('/products?limit=4');
-        setProducts(response.data.data);
-      } catch (error) {
-        console.error('Failed to fetch featured products:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchFeaturedProducts();
-  }, []);
-
-  if (isLoading) {
+export function FeaturedProducts({ products }: FeaturedProductsProps) {
+  if (!products || products.length === 0) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, i) => (

@@ -16,6 +16,8 @@ export class ProductsService {
   }) {
     const { skip = 0, take = 20, category, categories, minPrice, maxPrice, search } = params || {};
 
+    console.log('ProductsService.findAll called with params:', { skip, take, category, categories, minPrice, maxPrice, search });
+
     const where: any = {
       isActive: true,
     };
@@ -33,6 +35,7 @@ export class ProductsService {
       where.price = {};
       if (minPrice !== undefined) where.price.gte = minPrice;
       if (maxPrice !== undefined) where.price.lte = maxPrice;
+      console.log('Price filter applied:', where.price);
     }
 
     if (search) {
@@ -41,6 +44,8 @@ export class ProductsService {
         { description: { contains: search } },
       ];
     }
+
+    console.log('Final where clause:', JSON.stringify(where, null, 2));
 
     const [products, total] = await Promise.all([
       this.prisma.product.findMany({
@@ -79,6 +84,28 @@ export class ProductsService {
       features: JSON.parse(product.features || '[]'),
       images: JSON.parse((product as any).images || '[]'),
     };
+  }
+
+  async getCategories() {
+    // Get unique categories from products with product count
+    const categories = await this.prisma.product.groupBy({
+      by: ['category'],
+      where: {
+        isActive: true,
+      },
+      _count: {
+        category: true,
+      },
+    });
+
+    return categories.map((categoryGroup, index) => ({
+      id: `cat-${index + 1}`,
+      name: categoryGroup.category,
+      description: `Browse products in ${categoryGroup.category} category`,
+      productCount: categoryGroup._count.category,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
   }
 
   async findByCategory(category: string) {

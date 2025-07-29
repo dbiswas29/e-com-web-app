@@ -16,6 +16,7 @@ import { useCartStore } from '@/store/cartStore';
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
   const { isAuthenticated, user, logout } = useAuthStore();
   const { getTotalItems } = useCartStore();
@@ -35,6 +36,25 @@ export function Header() {
   const handleLogout = () => {
     logout();
     router.push('/');
+  };
+
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      router.push(`/products?search=${encodeURIComponent(query.trim())}`);
+    } else {
+      router.push('/products');
+    }
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSearch(searchQuery);
+  };
+
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch(e.currentTarget.value);
+    }
   };
 
   const totalItems = mounted ? getTotalItems() : 0;
@@ -70,17 +90,20 @@ export function Header() {
 
           {/* Search Bar */}
           <div className="hidden md:flex flex-1 max-w-lg mx-8">
-            <div className="relative w-full">
+            <form onSubmit={handleSearchSubmit} className="relative w-full">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleSearchKeyPress}
                 placeholder="Search products..."
                 className="input pl-10 pr-4"
                 aria-label="Search products"
               />
-            </div>
+            </form>
           </div>
 
           {/* Right side icons */}
@@ -182,17 +205,20 @@ export function Header() {
             
             {/* Mobile Search */}
             <div className="mt-4 px-3">
-              <div className="relative">
+              <form onSubmit={handleSearchSubmit} className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={handleSearchKeyPress}
                   placeholder="Search products..."
                   className="input pl-10 pr-4"
                   aria-label="Search products"
                 />
-              </div>
+              </form>
             </div>
           </div>
         )}

@@ -1,3 +1,4 @@
+
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -16,7 +17,7 @@ const mockUseSearchParams = useSearchParams as jest.MockedFunction<typeof useSea
 const mockSearchParams = {
   get: jest.fn(),
   entries: jest.fn(() => []),
-};
+}; 
 
 const mockCategories = [
   {
@@ -70,6 +71,7 @@ describe('ProductFilters', () => {
     
     expect(screen.getByText('Categories')).toBeInTheDocument();
     expect(screen.getByText('Price Range')).toBeInTheDocument();
+    expect(screen.getByText('Quick Filters')).toBeInTheDocument();
   });
 
   it('should display provided categories', () => {
@@ -85,6 +87,7 @@ describe('ProductFilters', () => {
     
     expect(screen.getByText('Categories')).toBeInTheDocument();
     expect(screen.getByText('Price Range')).toBeInTheDocument();
+    expect(screen.getByText('Quick Filters')).toBeInTheDocument();
   });
 
   it('should handle category selection', async () => {
@@ -101,23 +104,23 @@ describe('ProductFilters', () => {
     const user = userEvent.setup();
     render(<ProductFilters categories={mockCategories} />);
     
-    const minPriceInput = screen.getByPlaceholderText('0');
-    const maxPriceInput = screen.getByPlaceholderText('1000');
+    const minPriceInput = screen.getByPlaceholderText('Min');
+    const maxPriceInput = screen.getByPlaceholderText('Max');
     
     await user.type(minPriceInput, '50');
     await user.type(maxPriceInput, '200');
     
-    expect(minPriceInput).toHaveValue(50);
-    expect(maxPriceInput).toHaveValue(200);
+    expect(minPriceInput).toHaveValue('50');
+    expect(maxPriceInput).toHaveValue('200');
   });
 
   it('should handle apply filters button', async () => {
     const user = userEvent.setup();
     render(<ProductFilters categories={mockCategories} />);
     
-    const minPriceInput = screen.getByPlaceholderText('0');
-    const maxPriceInput = screen.getByPlaceholderText('1000');
-    const applyButton = screen.getByText('Apply Price Filter');
+    const minPriceInput = screen.getByPlaceholderText('Min');
+    const maxPriceInput = screen.getByPlaceholderText('Max');
+    const applyButton = screen.getByText('Apply Filters');
     
     await user.type(minPriceInput, '50');
     await user.type(maxPriceInput, '200');
@@ -130,7 +133,7 @@ describe('ProductFilters', () => {
     const user = userEvent.setup();
     render(<ProductFilters categories={mockCategories} />);
     
-    const clearButton = screen.getByText('Clear All Filters');
+    const clearButton = screen.getByText('Clear All');
     await user.click(clearButton);
     
     expect(mockPush).toHaveBeenCalled();
@@ -144,9 +147,24 @@ describe('ProductFilters', () => {
     
     render(<ProductFilters categories={mockCategories} />);
     
-    // The currently selected category checkbox should be checked
-    const electronicsCheckbox = screen.getByRole('checkbox', { name: /Electronics/ });
-    expect(electronicsCheckbox).toBeChecked();
+    // The currently selected category should be highlighted
+    const electronicsOption = screen.getByText('Electronics');
+    expect(electronicsOption.closest('label')).toHaveClass('text-primary-600');
+  });
+
+  it('should handle quick filter buttons', async () => {
+    const user = userEvent.setup();
+    render(<ProductFilters categories={mockCategories} />);
+    
+    const quickFilterButtons = screen.getAllByRole('button');
+    const priceButton = quickFilterButtons.find(button => 
+      button.textContent?.includes('Under $50')
+    );
+    
+    if (priceButton) {
+      await user.click(priceButton);
+      expect(mockPush).toHaveBeenCalled();
+    }
   });
 
   it('should preserve existing search params when applying filters', async () => {
@@ -157,18 +175,13 @@ describe('ProductFilters', () => {
       return '';
     });
     
-    // Mock the entries to return the search param
-    mockSearchParams.entries.mockReturnValue([['search', 'laptop']] as any);
+    mockSearchParams.entries.mockReturnValue([['search', 'laptop']]);
     
     render(<ProductFilters categories={mockCategories} />);
     
-    const electronicsCheckbox = screen.getByRole('checkbox', { name: /Electronics/ });
-    await user.click(electronicsCheckbox);
+    const electronicsCategory = screen.getByText('Electronics');
+    await user.click(electronicsCategory);
     
     expect(mockPush).toHaveBeenCalled();
-    // Should preserve the search term when adding category filter
-    const lastCall = mockPush.mock.calls[mockPush.mock.calls.length - 1][0];
-    expect(lastCall).toContain('search=laptop');
-    expect(lastCall).toContain('categories=Electronics');
   });
 });

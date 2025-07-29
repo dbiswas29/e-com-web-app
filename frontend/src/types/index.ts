@@ -7,6 +7,17 @@ export interface User {
   updatedAt: string;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  productCount?: number;
+  slug?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Product {
   id: string;
   name: string;
