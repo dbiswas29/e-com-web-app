@@ -7,7 +7,6 @@ import { Product } from '@/types';
 import { serverApiClient, handleServerApiCall } from '@/lib/server-api';
 import { ProductActions } from '@/components/products/ProductActions';
 import { RelatedProducts } from '@/components/products/RelatedProducts';
-import { ProductImageGallery } from './ProductImageGallery';
 
 interface ProductDetailsPageProps {
   params: {
@@ -15,8 +14,7 @@ interface ProductDetailsPageProps {
   };
 }
 
-export default async function ProductDetailsPage(props: ProductDetailsPageProps = { params: { id: 'default' } }) {
-  const { params } = props;
+export default async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
   const productId = params.id;
 
   // Fetch product data on the server
@@ -34,6 +32,13 @@ export default async function ProductDetailsPage(props: ProductDetailsPageProps 
   if (!product) {
     notFound();
   }
+
+  // Prepare image data
+  const allImages = product.images && product.images.length > 0 
+    ? product.images 
+    : [product.imageUrl];
+  
+  const mainImage = allImages[0];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -59,11 +64,36 @@ export default async function ProductDetailsPage(props: ProductDetailsPageProps 
         {/* Product Details */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
           {/* Product Images */}
-          <ProductImageGallery
-            productName={product.name}
-            productImages={product.images || []}
-            mainImageUrl={product.imageUrl}
-          />
+          <div className="space-y-4">
+            <div className="aspect-square relative bg-white rounded-lg overflow-hidden">
+              <Image
+                src={mainImage}
+                alt={product.name}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+            
+            {/* Image Thumbnails */}
+            {allImages.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {allImages.map((image, index) => (
+                  <div
+                    key={index}
+                    className="aspect-square relative bg-white rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-primary-300"
+                  >
+                    <Image
+                      src={image}
+                      alt={`${product.name} ${index + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Product Info */}
           <div className="space-y-6">

@@ -49,6 +49,12 @@ export class ProductsController {
     });
   }
 
+  @Get('categories')
+  @ApiOperation({ summary: 'Get all available categories' })
+  async getCategories() {
+    return this.productsService.getCategories();
+  }
+
   @Get('category/:category')
   @ApiOperation({ summary: 'Get products by category' })
   async findByCategory(@Param('category') category: string) {
