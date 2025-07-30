@@ -201,6 +201,55 @@ export function Header() {
                   {item.name}
                 </Link>
               ))}
+              
+              {/* User-specific links for mobile */}
+              {mounted && isAuthenticated && (
+                <>
+                  <Link
+                    href="/profile"
+                    className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md transition-colors focus:outline-none focus:ring-0"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  <Link
+                    href="/orders"
+                    className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md transition-colors focus:outline-none focus:ring-0"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Orders
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsMenuOpen(false);
+                    }}
+                    className="block w-full text-left px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md transition-colors focus:outline-none focus:ring-0"
+                  >
+                    Sign out
+                  </button>
+                </>
+              )}
+              
+              {/* Auth links for mobile */}
+              {mounted && !isAuthenticated && (
+                <>
+                  <Link
+                    href="/auth/login"
+                    className="block px-3 py-2 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md transition-colors focus:outline-none focus:ring-0"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    className="block px-3 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-md transition-colors focus:outline-none focus:ring-0"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign up
+                  </Link>
+                </>
+              )}
             </div>
             
             {/* Mobile Search */}
