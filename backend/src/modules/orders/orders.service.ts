@@ -33,10 +33,6 @@ export class OrdersService {
     return this.findOne(order._id.toString());
   }
 
-  async createOrder(orderData: any) {
-    return this.create(orderData);
-  }
-
   async findAll() {
     return this.orderModel
       .find()
@@ -49,10 +45,6 @@ export class OrdersService {
       })
       .sort({ createdAt: -1 })
       .exec();
-  }
-
-  async getAllOrders() {
-    return this.findAll();
   }
 
   async findByUserId(userId: string) {
@@ -69,31 +61,9 @@ export class OrdersService {
       .exec();
   }
 
-  async getUserOrders(userId: string) {
-    return this.findByUserId(userId);
-  }
-
   async findOne(id: string): Promise<OrderDocument | null> {
     return this.orderModel
       .findById(id)
-      .populate({
-        path: 'items',
-        populate: {
-          path: 'productId',
-          model: 'Product'
-        }
-      })
-      .exec();
-  }
-
-  async getOrderById(orderId: string, userId?: string): Promise<OrderDocument | null> {
-    const filter: any = { _id: orderId };
-    if (userId) {
-      filter.userId = new Types.ObjectId(userId);
-    }
-    
-    return this.orderModel
-      .findOne(filter)
       .populate({
         path: 'items',
         populate: {
@@ -117,7 +87,31 @@ export class OrdersService {
       .exec();
   }
 
-  async updateOrderStatus(orderId: string, status: OrderStatus): Promise<OrderDocument | null> {
-    return this.updateStatus(orderId, status);
+  // Alias methods to match controller expectations
+  async createOrder(orderData: any) {
+    return this.create(orderData);
+  }
+
+  async getUserOrders(userId: string) {
+    return this.findByUserId(userId);
+  }
+
+  async getOrderById(orderId: string, userId?: string): Promise<OrderDocument | null> {
+    const order = await this.findOne(orderId);
+    
+    // If userId is provided, verify the order belongs to the user
+    if (userId && order && order.userId.toString() !== userId) {
+      return null;
+    }
+    
+    return order;
+  }
+
+  async updateOrderStatus(orderId: string, status: string) {
+    return this.updateStatus(orderId, status as OrderStatus);
+  }
+
+  async getAllOrders() {
+    return this.findAll();
   }
 }

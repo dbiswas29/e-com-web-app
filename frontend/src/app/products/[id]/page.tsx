@@ -15,8 +15,7 @@ interface ProductDetailsPageProps {
   };
 }
 
-export default async function ProductDetailsPage(props: ProductDetailsPageProps = { params: { id: 'default' } }) {
-  const { params } = props;
+export default async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
   const productId = params.id;
 
   // Fetch product data on the server

@@ -44,18 +44,21 @@ export function Header() {
     } else {
       router.push('/products');
     }
-    // Clear the search input after search
-    setSearchQuery('');
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSearch(searchQuery);
+    // Clear the search input after search
+    setSearchQuery('');
   };
 
-  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      handleSearch(e.currentTarget.value);
+      e.preventDefault();
+      handleSearch(searchQuery);
+      // Clear the search input after search
+      setSearchQuery('');
     }
   };
 
@@ -100,7 +103,7 @@ export function Header() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleSearchKeyPress}
+                onKeyDown={handleSearchKeyDown}
                 placeholder="Search products..."
                 className="input pl-10 pr-4"
                 aria-label="Search products"
@@ -264,7 +267,7 @@ export function Header() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={handleSearchKeyPress}
+                  onKeyDown={handleSearchKeyDown}
                   placeholder="Search products..."
                   className="input pl-10 pr-4"
                   aria-label="Search products"

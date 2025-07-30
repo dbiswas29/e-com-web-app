@@ -16,8 +16,7 @@ interface ProductsPageProps {
   };
 }
 
-export default async function ProductsPage(props: ProductsPageProps = { searchParams: {} }) {
-  const { searchParams } = props;
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const categoriesParam = searchParams?.categories;
   const categoryParam = searchParams?.category; // Legacy support
   const searchQuery = searchParams?.search;

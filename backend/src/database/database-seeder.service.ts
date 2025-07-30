@@ -13,17 +13,21 @@ export class DatabaseSeeder implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.seedDatabase();
+    // Only seed in development mode or when explicitly requested
+    if (process.env.NODE_ENV === 'development' && process.env.SEED_DATABASE === 'true') {
+      await this.seedDatabase();
+    }
   }
 
   private async seedDatabase() {
     console.log('🌱 Starting database seeding...');
 
-    // Clear existing data for fresh start
-    await this.productModel.deleteMany({});
-    await this.userModel.deleteMany({});
-    
-    console.log('🗑️ Cleared existing data');
+    // Only clear data if explicitly requested
+    if (process.env.CLEAR_DATABASE === 'true') {
+      await this.productModel.deleteMany({});
+      await this.userModel.deleteMany({});
+      console.log('🗑️ Cleared existing data');
+    }
 
     // Seed users
     await this.seedUsers();
@@ -31,7 +35,7 @@ export class DatabaseSeeder implements OnModuleInit {
     // Seed products
     await this.seedProducts();
 
-    console.log('✅ Database seeding completed with 9 products!');
+    console.log('✅ Database seeding completed!');
   }
 
   private async seedUsers() {
@@ -72,13 +76,15 @@ export class DatabaseSeeder implements OnModuleInit {
       // Check if products already exist
       const existingProductCount = await this.productModel.countDocuments();
       if (existingProductCount >= 9) {
-        console.log('📦 Products already exist (9 products), skipping product seeding');
+        console.log('📦 Products already exist (9+ products), skipping product seeding');
         return;
       }
 
-      // Clear existing products to ensure we have exactly 9
-      await this.productModel.deleteMany({});
-      console.log('🗑️ Cleared existing products');
+      // Only clear existing products if explicitly requested
+      if (process.env.CLEAR_DATABASE === 'true' && existingProductCount > 0) {
+        await this.productModel.deleteMany({});
+        console.log('🗑️ Cleared existing products');
+      }
 
       const products = [
       {
