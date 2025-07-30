@@ -18,7 +18,7 @@ A modern, full-stack e-commerce web application built with Next.js (frontend) an
 ### Backend (NestJS)
 - **RESTful APIs**: Products, Users, Cart, Orders
 - **Authentication**: JWT-based auth with refresh tokens
-- **Database**: SQLite with Prisma ORM
+- **Database**: MongoDB with Mongoose ODM
 - **Validation**: Input validation and sanitization
 - **Security**: CORS, rate limiting, helmet
 - **Documentation**: Swagger/OpenAPI
@@ -38,7 +38,7 @@ A modern, full-stack e-commerce web application built with Next.js (frontend) an
 ### Backend
 - **Framework**: NestJS
 - **Language**: TypeScript
-- **Database**: SQLite (Prisma ORM)
+- **Database**: MongoDB (Mongoose ODM)
 - **Authentication**: JWT + Passport
 - **Validation**: Class Validator
 - **Documentation**: Swagger
@@ -63,13 +63,11 @@ A modern, full-stack e-commerce web application built with Next.js (frontend) an
    # Update the .env file with your configuration
    ```
 
-4. **Set up the database**
+4. **Set up MongoDB**
    ```bash
-   cd backend
-   npx prisma generate
-   npx prisma db push
-   npx prisma db seed
-   cd ..
+   # Make sure MongoDB is installed and running
+   # Default connection: mongodb://localhost:27017/ecommerce
+   # Database will be automatically seeded when backend starts
    ```
 
 ## 🚀 Development
@@ -116,9 +114,9 @@ e-com-web-app/
 ├── backend/                  # NestJS application
 │   ├── src/
 │   │   ├── modules/        # Feature modules
-│   │   ├── common/         # Shared utilities
+│   │   ├── schemas/        # MongoDB schemas
+│   │   ├── database/       # Database seeder
 │   │   └── main.ts
-│   ├── prisma/             # Database schema and migrations
 │   └── package.json
 ├── .env.example            # Environment variables template
 ├── .gitignore             # Git ignore rules

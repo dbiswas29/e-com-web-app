@@ -28,14 +28,12 @@ echo ⚡ Setting up Backend (NestJS)...
 cd backend
 call npm install
 
-:: Generate Prisma client and setup database
-echo 🗃️ Setting up database...
-call npx prisma generate
-call npx prisma db push
+:: Setup MongoDB connection
+echo 🗃️ Setting up MongoDB connection...
+echo Make sure MongoDB is running on localhost:27017
 
-:: Seed the database
-echo 🌱 Seeding database with sample data...
-call npm run db:seed
+:: Database will be automatically seeded when the server starts
+echo 🌱 Database will be seeded automatically on server startup...
 
 cd ..
 

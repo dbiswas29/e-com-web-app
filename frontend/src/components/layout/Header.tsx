@@ -44,6 +44,8 @@ export function Header() {
     } else {
       router.push('/products');
     }
+    // Clear the search input after search
+    setSearchQuery('');
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {

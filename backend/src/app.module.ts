@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 
-import { PrismaModule } from './common/prisma/prisma.module';
+import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ProductsModule } from './modules/products/products.module';
@@ -25,7 +25,7 @@ import { OrdersModule } from './modules/orders/orders.module';
     ]),
 
     // Database
-    PrismaModule,
+    DatabaseModule,
 
     // Feature modules
     AuthModule,
