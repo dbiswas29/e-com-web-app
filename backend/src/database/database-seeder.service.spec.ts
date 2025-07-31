@@ -23,6 +23,11 @@ describe('DatabaseSeeder', () => {
   };
 
   beforeEach(async () => {
+    // Clear environment variables
+    delete process.env.SEED_DATABASE;
+    delete process.env.CLEAR_DATABASE;
+    delete process.env.NODE_ENV;
+    
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DatabaseSeeder,
@@ -51,16 +56,44 @@ describe('DatabaseSeeder', () => {
   });
 
   describe('onModuleInit', () => {
-    it('should call seedDatabase', async () => {
+    it('should call seedDatabase when SEED_DATABASE is true', async () => {
+      process.env.NODE_ENV = 'development';
+      process.env.SEED_DATABASE = 'true';
       const seedDatabaseSpy = jest.spyOn(service as any, 'seedDatabase').mockResolvedValue(undefined);
 
       await service.onModuleInit();
 
       expect(seedDatabaseSpy).toHaveBeenCalled();
     });
+
+    it('should not call seedDatabase when SEED_DATABASE is false', async () => {
+      process.env.NODE_ENV = 'development';
+      process.env.SEED_DATABASE = 'false';
+      const seedDatabaseSpy = jest.spyOn(service as any, 'seedDatabase').mockResolvedValue(undefined);
+
+      await service.onModuleInit();
+
+      expect(seedDatabaseSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not call seedDatabase when NODE_ENV is not development', async () => {
+      process.env.NODE_ENV = 'production';
+      process.env.SEED_DATABASE = 'true';
+      const seedDatabaseSpy = jest.spyOn(service as any, 'seedDatabase').mockResolvedValue(undefined);
+
+      await service.onModuleInit();
+
+      expect(seedDatabaseSpy).not.toHaveBeenCalled();
+    });
   });
 
   describe('seedDatabase', () => {
+    beforeEach(() => {
+      process.env.NODE_ENV = 'development';
+      process.env.SEED_DATABASE = 'true';
+      process.env.CLEAR_DATABASE = 'true';
+    });
+
     it('should seed users and products successfully', async () => {
       mockUserModel.deleteMany.mockResolvedValue({});
       mockProductModel.deleteMany.mockResolvedValue({});
@@ -74,7 +107,7 @@ describe('DatabaseSeeder', () => {
       expect(mockProductModel.deleteMany).toHaveBeenCalled();
       expect(seedUsersSpy).toHaveBeenCalled();
       expect(seedProductsSpy).toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith('✅ Database seeding completed with 9 products!');
+      expect(consoleSpy).toHaveBeenCalledWith('✅ Database seeding completed!');
 
       consoleSpy.mockRestore();
     });
