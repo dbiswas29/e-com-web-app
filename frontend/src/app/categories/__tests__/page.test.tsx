@@ -25,7 +25,7 @@ jest.mock('next/image', () => {
       src={src} 
       alt={alt} 
       className={className} 
-      data-fill={fill}
+      data-fill={fill ? 'true' : 'false'}
       data-sizes={sizes}
       {...props} 
     />

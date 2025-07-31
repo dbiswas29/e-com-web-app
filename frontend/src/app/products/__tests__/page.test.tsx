@@ -28,15 +28,15 @@ const TestProductsPage = ({ searchParams }: { searchParams: any }) => {
               <h1 className="text-3xl font-bold mb-4">
                 {hasCategories 
                   ? categories.length === 1 
-                    ? `${categories[0]} Products`
-                    : `${categories.length} Categories Selected`
+                    ? `1 category selected`
+                    : `${categories.length} categories selected`
                   : 'All Products'
                 }
               </h1>
               <p className="text-gray-600">
                 {hasCategories 
                   ? categories.length === 1
-                    ? `Discover our ${categories[0].toLowerCase()} collection`
+                    ? `Showing products from: ${categories[0]}`
                     : `Browse products from: ${categories.join(', ')}`
                   : 'Discover our complete collection of products'
                 }
@@ -105,8 +105,8 @@ describe('ProductsPage', () => {
     
     render(<TestProductsPage searchParams={{ categories: 'Electronics' }} />);
 
-    expect(screen.getByText('Electronics Products')).toBeInTheDocument();
-    expect(screen.getByText('Discover our electronics collection')).toBeInTheDocument();
+    expect(screen.getByText('1 category selected')).toBeInTheDocument();
+    expect(screen.getByText('Showing products from: Electronics')).toBeInTheDocument();
   });
 
   it('should render multiple categories page', () => {
@@ -120,7 +120,7 @@ describe('ProductsPage', () => {
     
     render(<TestProductsPage searchParams={{ categories: 'Electronics,Clothing,Books' }} />);
     
-    expect(screen.getByText('3 Categories Selected')).toBeInTheDocument();
+    expect(screen.getByText('3 categories selected')).toBeInTheDocument();
     expect(screen.getByText('Browse products from: Electronics, Clothing, Books')).toBeInTheDocument();
   });
 
@@ -135,8 +135,8 @@ describe('ProductsPage', () => {
     
     render(<TestProductsPage searchParams={{ category: 'Books' }} />);
     
-    expect(screen.getByText('Books Products')).toBeInTheDocument();
-    expect(screen.getByText('Discover our books collection')).toBeInTheDocument();
+    expect(screen.getByText('1 category selected')).toBeInTheDocument();
+    expect(screen.getByText('Showing products from: Books')).toBeInTheDocument();
   });
 
   it('should handle empty categories parameter', () => {
@@ -188,7 +188,7 @@ describe('ProductsPage', () => {
     
     render(<TestProductsPage searchParams={{ categories: 'Electronics, , Clothing,  ' }} />);
     
-    expect(screen.getByText('2 Categories Selected')).toBeInTheDocument();
+    expect(screen.getByText('2 categories selected')).toBeInTheDocument();
     expect(screen.getByText('Browse products from: Electronics, Clothing')).toBeInTheDocument();
   });
 });

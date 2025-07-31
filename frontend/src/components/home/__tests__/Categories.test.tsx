@@ -47,9 +47,11 @@ jest.mock('next/link', () => {
 });
 
 jest.mock('next/image', () => {
-  return ({ src, alt, ...props }: any) => (
-    <img src={src} alt={alt} {...props} />
-  );
+  return ({ src, alt, fill, ...props }: any) => {
+    const mockProps: any = { src, alt, ...props };
+    if (fill) mockProps['data-fill'] = 'true';
+    return <img {...mockProps} />;
+  };
 });
 
 describe('Categories', () => {

@@ -91,11 +91,11 @@ export class DatabaseSeeder implements OnModuleInit {
         name: 'Minimalist Desk Lamp',
         description: 'A sleek and modern desk lamp perfect for any workspace. Features adjustable brightness and color temperature.',
         price: 79.99,
-        imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=600&fit=crop&auto=format',
+        imageUrl: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=600&h=600&fit=crop&auto=format',
         images: [
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=600&fit=crop&auto=format',
           'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=600&h=600&fit=crop&auto=format',
-          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&h=600&fit=crop&auto=format'
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&h=600&fit=crop&auto=format',
+          'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=600&h=600&fit=crop&auto=format'
         ],
         category: 'Lighting',
         stock: 25,
@@ -190,11 +190,11 @@ export class DatabaseSeeder implements OnModuleInit {
         name: 'Premium Coffee Maker',
         description: 'Professional-grade coffee maker with built-in grinder and programmable settings. Perfect for coffee enthusiasts.',
         price: 249.99,
-        imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=600&fit=crop&auto=format',
+        imageUrl: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&h=600&fit=crop&auto=format',
         images: [
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=600&fit=crop&auto=format',
           'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&h=600&fit=crop&auto=format',
-          'https://images.unsplash.com/photo-1514066558159-fc8c737ef259?w=600&h=600&fit=crop&auto=format'
+          'https://images.unsplash.com/photo-1514066558159-fc8c737ef259?w=600&h=600&fit=crop&auto=format',
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop&auto=format'
         ],
         category: 'Kitchen & Dining',
         stock: 18,
