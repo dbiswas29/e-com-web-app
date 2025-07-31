@@ -4,10 +4,16 @@ import { ProductImageGallery } from '../ProductImageGallery';
 
 // Mock Next.js Image component
 jest.mock('next/image', () => {
-  return function Image({ alt, src, fill, priority, ...props }: any) {
+  return function Image({ alt, src, width, height, priority, className, ...props }: any) {
     // Handle Next.js Image specific props properly
-    const imgProps: any = { alt, src, ...props };
-    if (fill) imgProps['data-fill'] = 'true';
+    const imgProps: any = { 
+      alt, 
+      src, 
+      className,
+      ...props 
+    };
+    if (width) imgProps['data-width'] = width.toString();
+    if (height) imgProps['data-height'] = height.toString();
     if (priority) imgProps['data-priority'] = 'true';
     return <img {...imgProps} />;
   };
@@ -416,6 +422,42 @@ describe('ProductImageGallery', () => {
     
     inactiveDots.forEach(dot => {
       expect(dot).toHaveClass('hover:bg-gray-400');
+    });
+  });
+
+  it('should render main image with correct dimensions', () => {
+    render(<ProductImageGallery {...mockProps} />);
+    
+    const mainImage = screen.getByAltText('Test Product - Image 1');
+    expect(mainImage).toHaveAttribute('data-width', '600');
+    expect(mainImage).toHaveAttribute('data-height', '600');
+    expect(mainImage).toHaveClass('w-full', 'h-full', 'object-cover');
+  });
+
+  it('should render thumbnail images with correct dimensions', () => {
+    render(<ProductImageGallery {...mockProps} />);
+    
+    const thumbnails = screen.getAllByAltText(/Test Product thumbnail/);
+    thumbnails.forEach(thumbnail => {
+      expect(thumbnail).toHaveAttribute('data-width', '150');
+      expect(thumbnail).toHaveAttribute('data-height', '150');
+      expect(thumbnail).toHaveClass('w-full', 'h-full', 'object-cover');
+    });
+  });
+
+  it('should apply priority loading to main image', () => {
+    render(<ProductImageGallery {...mockProps} />);
+    
+    const mainImage = screen.getByAltText('Test Product - Image 1');
+    expect(mainImage).toHaveAttribute('data-priority', 'true');
+  });
+
+  it('should not apply priority loading to thumbnail images', () => {
+    render(<ProductImageGallery {...mockProps} />);
+    
+    const thumbnails = screen.getAllByAltText(/Test Product thumbnail/);
+    thumbnails.forEach(thumbnail => {
+      expect(thumbnail).not.toHaveAttribute('data-priority');
     });
   });
 });

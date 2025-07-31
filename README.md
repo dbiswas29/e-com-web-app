@@ -2,6 +2,11 @@
 
 A modern, full-stack e-commerce web application built with Next.js (frontend) and NestJS (backend), following industry best practices for performance, accessibility, SEO, and security.
 
+USE node v22.17.0 and npm  v10.9.2 
+INSTALL MongoDB Community Server 8.0.12, MongoDB Compass and MongoDB Shell
+
+after installing MongoDB Shell to start MongoDB Service go to cmd and type mongosh
+
 ## 🚀 Features
 
 ### Frontend (Next.js)

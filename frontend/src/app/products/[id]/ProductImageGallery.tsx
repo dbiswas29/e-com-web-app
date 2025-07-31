@@ -53,8 +53,9 @@ export function ProductImageGallery({ productName, productImages, mainImageUrl }
         <Image
           src={currentImage}
           alt={`${productName} - Image ${currentImageIndex + 1}`}
-          fill
-          className="object-cover"
+          width={600}
+          height={600}
+          className="w-full h-full object-cover"
           priority
         />
         
@@ -96,8 +97,9 @@ export function ProductImageGallery({ productName, productImages, mainImageUrl }
             <Image
               src={image}
               alt={`${productName} thumbnail ${index + 1}`}
-              fill
-              className="object-cover"
+              width={150}
+              height={150}
+              className="w-full h-full object-cover"
             />
             {index === currentImageIndex && (
               <div className="absolute inset-0 bg-primary-500 bg-opacity-20" />
