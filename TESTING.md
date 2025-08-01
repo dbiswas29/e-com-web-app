@@ -40,7 +40,7 @@ Located in `backend/src/**/*.spec.ts`
 #### Products Service Tests
 - Tests all product filtering logic
 - Tests pagination and search functionality
-- Mocks Prisma service interactions
+- Mocks MongoDB/Mongoose interactions
 
 #### Auth Service Tests  
 - Tests user registration and login
@@ -244,7 +244,7 @@ Located in `frontend/playwright.config.ts`:
 ## Mock Strategy
 
 ### Backend Mocks
-- **PrismaService**: Mocked for unit tests
+- **MongoDB/Mongoose**: Mocked for unit tests
 - **JwtService**: Mocked for authentication tests
 - **External APIs**: Mocked using Jest
 

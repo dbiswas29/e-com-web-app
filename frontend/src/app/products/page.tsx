@@ -16,8 +16,7 @@ interface ProductsPageProps {
   };
 }
 
-export default async function ProductsPage(props: ProductsPageProps = { searchParams: {} }) {
-  const { searchParams } = props;
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const categoriesParam = searchParams?.categories;
   const categoryParam = searchParams?.category; // Legacy support
   const searchQuery = searchParams?.search;
@@ -57,8 +56,8 @@ export default async function ProductsPage(props: ProductsPageProps = { searchPa
       return `Search Results for "${searchQuery}"`;
     }
     if (selectedCategories.length === 0) return 'All Products';
-    if (selectedCategories.length === 1) return `${selectedCategories[0]} Products`;
-    return `${selectedCategories.length} Categories Selected`;
+    if (selectedCategories.length === 1) return `1 category selected`;
+    return `${selectedCategories.length} categories selected`;
   };
 
   const getPageDescription = () => {
@@ -66,7 +65,7 @@ export default async function ProductsPage(props: ProductsPageProps = { searchPa
       return `Showing results for "${searchQuery}"`;
     }
     if (selectedCategories.length === 0) return 'Discover our complete collection of products';
-    if (selectedCategories.length === 1) return `Discover our ${selectedCategories[0].toLowerCase()} collection`;
+    if (selectedCategories.length === 1) return `Showing products from: ${selectedCategories[0]}`;
     return `Browse products from: ${selectedCategories.join(', ')}`;
   };
 

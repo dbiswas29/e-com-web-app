@@ -11,7 +11,6 @@ I have created a comprehensive testing setup for your e-commerce web application
 - **Products Controller Tests**: `modules/products/products.controller.spec.ts`
 - **Auth Service Tests**: `modules/auth/auth.service.spec.ts`
 - **Cart Service Tests**: `modules/cart/cart.service.spec.ts`
-- **Prisma Service Tests**: `common/prisma/prisma.service.spec.ts`
 - **E2E Tests**: `test/app.e2e-spec.ts`
 
 ### Frontend Tests (`frontend/src/`)

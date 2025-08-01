@@ -1,57 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../common/prisma/prisma.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { User, UserDocument } from '../../schemas/user.schema';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+  ) {}
 
-  async findByEmail(email: string) {
-    return this.prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+  async findByEmail(email: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ email }).select('-password').exec();
   }
 
-  async findById(id: string) {
-    return this.prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+  async findById(id: string): Promise<UserDocument | null> {
+    return this.userModel.findById(id).select('-password').exec();
   }
 
   async updateProfile(id: string, updateData: {
     firstName?: string;
     lastName?: string;
     email?: string;
-  }) {
-    return this.prisma.user.update({
-      where: { id },
-      data: updateData,
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+  }): Promise<UserDocument | null> {
+    return this.userModel
+      .findByIdAndUpdate(id, updateData, { new: true })
+      .select('-password')
+      .exec();
   }
 }

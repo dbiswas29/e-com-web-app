@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../common/prisma/prisma.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Product, ProductDocument } from '../../schemas/product.schema';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @InjectModel(Product.name) private productModel: Model<ProductDocument>,
+  ) {}
 
   async findAll(params?: {
     skip?: number;
@@ -18,51 +22,45 @@ export class ProductsService {
 
     console.log('ProductsService.findAll called with params:', { skip, take, category, categories, minPrice, maxPrice, search });
 
-    const where: any = {
+    const filter: any = {
       isActive: true,
     };
 
     // Handle multiple categories or single category
     if (categories && categories.length > 0) {
-      where.category = {
-        in: categories,
-      };
+      filter.category = { $in: categories };
     } else if (category) {
-      where.category = category;
+      filter.category = category;
     }
 
     if (minPrice !== undefined || maxPrice !== undefined) {
-      where.price = {};
-      if (minPrice !== undefined) where.price.gte = minPrice;
-      if (maxPrice !== undefined) where.price.lte = maxPrice;
-      console.log('Price filter applied:', where.price);
+      filter.price = {};
+      if (minPrice !== undefined) filter.price.$gte = minPrice;
+      if (maxPrice !== undefined) filter.price.$lte = maxPrice;
+      console.log('Price filter applied:', filter.price);
     }
 
     if (search) {
-      where.OR = [
-        { name: { contains: search } },
-        { description: { contains: search } },
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
       ];
     }
 
-    console.log('Final where clause:', JSON.stringify(where, null, 2));
+    console.log('Final filter:', JSON.stringify(filter, null, 2));
 
     const [products, total] = await Promise.all([
-      this.prisma.product.findMany({
-        where,
-        skip,
-        take,
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.product.count({ where }),
+      this.productModel
+        .find(filter)
+        .skip(skip)
+        .limit(take)
+        .sort({ createdAt: -1 })
+        .exec(),
+      this.productModel.countDocuments(filter),
     ]);
 
     return {
-      data: products.map(product => ({
-        ...product,
-        features: JSON.parse(product.features || '[]'),
-        images: JSON.parse((product as any).images || '[]'),
-      })),
+      data: products.map(product => product.toJSON()),
       total,
       page: Math.floor(skip / take) + 1,
       limit: take,
@@ -70,75 +68,52 @@ export class ProductsService {
     };
   }
 
-  async findOne(id: string) {
-    const product = await this.prisma.product.findUnique({
-      where: { id },
-    });
-
-    if (!product) {
-      return null;
-    }
-
-    return {
-      ...product,
-      features: JSON.parse(product.features || '[]'),
-      images: JSON.parse((product as any).images || '[]'),
-    };
+  async findOne(id: string): Promise<ProductDocument | null> {
+    return this.productModel.findById(id).exec();
   }
 
   async getCategories() {
     // Get unique categories from products with product count
-    const categories = await this.prisma.product.groupBy({
-      by: ['category'],
-      where: {
-        isActive: true,
+    const categories = await this.productModel.aggregate([
+      { $match: { isActive: true } },
+      { 
+        $group: { 
+          _id: '$category', 
+          count: { $sum: 1 }
+        } 
       },
-      _count: {
-        category: true,
-      },
-    });
+      { $sort: { _id: 1 } }
+    ]);
 
     return categories.map((categoryGroup, index) => ({
       id: `cat-${index + 1}`,
-      name: categoryGroup.category,
-      description: `Browse products in ${categoryGroup.category} category`,
-      productCount: categoryGroup._count.category,
+      name: categoryGroup._id,
+      description: `Browse products in ${categoryGroup._id} category`,
+      productCount: categoryGroup.count,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }));
   }
 
-  async findByCategory(category: string) {
-    const products = await this.prisma.product.findMany({
-      where: {
+  async findByCategory(category: string): Promise<ProductDocument[]> {
+    return this.productModel
+      .find({
         category,
         isActive: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return products.map(product => ({
-      ...product,
-      features: JSON.parse(product.features || '[]'),
-      images: JSON.parse((product as any).images || '[]'),
-    }));
+      })
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
-  async findRelatedProducts(productId: string, category: string, limit = 4) {
-    const products = await this.prisma.product.findMany({
-      where: {
+  async findRelatedProducts(productId: string, category: string, limit = 4): Promise<ProductDocument[]> {
+    return this.productModel
+      .find({
         category,
         isActive: true,
-        id: { not: productId }, // Exclude the current product
-      },
-      take: limit,
-      orderBy: { rating: 'desc' }, // Order by rating to get best related products
-    });
-
-    return products.map(product => ({
-      ...product,
-      features: JSON.parse(product.features || '[]'),
-      images: JSON.parse((product as any).images || '[]'),
-    }));
+        _id: { $ne: productId }, // Exclude the current product
+      })
+      .limit(limit)
+      .sort({ rating: -1 }) // Order by rating to get best related products
+      .exec();
   }
 }

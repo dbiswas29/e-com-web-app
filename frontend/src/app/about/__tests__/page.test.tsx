@@ -3,8 +3,10 @@ import AboutPage from '../page';
 
 // Mock Next.js Image component
 jest.mock('next/image', () => {
-  return function Image({ alt, ...props }: any) {
-    return <img alt={alt} {...props} />;
+  return function Image({ alt, fill, ...props }: any) {
+    const imgProps: any = { alt, ...props };
+    if (fill) imgProps['data-fill'] = 'true';
+    return <img {...imgProps} />;
   };
 });
 

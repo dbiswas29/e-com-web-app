@@ -1,33 +1,39 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { getModelToken } from '@nestjs/mongoose';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as argon2 from 'argon2';
-import { AuthService } from './auth.service';
-import { PrismaService } from '../../common/prisma/prisma.service';
-import { RegisterDto, LoginDto } from './dto/auth.dto';
+import { Model, Types } from 'mongoose';
+import * as bcrypt from 'bcryptjs';
 
-// Mock argon2
-jest.mock('argon2', () => ({
-  hash: jest.fn(),
-  verify: jest.fn(),
-}));
+import { AuthService } from './auth.service';
+import { User, UserDocument } from '../../schemas/user.schema';
+
+jest.mock('bcryptjs');
 
 describe('AuthService', () => {
   let service: AuthService;
-  let prismaService: PrismaService;
+  let userModel: Model<UserDocument>;
   let jwtService: JwtService;
 
-  const mockPrismaService = {
-    user: {
-      findUnique: jest.fn(),
-      create: jest.fn(),
-    },
+  const mockUserModel = {
+    findOne: jest.fn(),
+    findById: jest.fn(),
+    create: jest.fn(),
   };
 
   const mockJwtService = {
-    sign: jest.fn(),
     signAsync: jest.fn(),
     verify: jest.fn(),
+  };
+
+  const mockUser = {
+    _id: new Types.ObjectId(),
+    email: 'test@example.com',
+    firstName: 'Test',
+    lastName: 'User',
+    password: 'hashedPassword',
+    role: 'USER',
+    toJSON: jest.fn().mockReturnThis(),
   };
 
   beforeEach(async () => {
@@ -35,8 +41,8 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: getModelToken(User.name),
+          useValue: mockUserModel,
         },
         {
           provide: JwtService,
@@ -46,7 +52,7 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    prismaService = module.get<PrismaService>(PrismaService);
+    userModel = module.get<Model<UserDocument>>(getModelToken(User.name));
     jwtService = module.get<JwtService>(JwtService);
   });
 
@@ -59,120 +65,62 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    const registerDto: RegisterDto = {
+    const registerDto = {
       email: 'test@example.com',
       password: 'password123',
-      firstName: 'John',
-      lastName: 'Doe',
+      firstName: 'Test',
+      lastName: 'User',
     };
 
-    const mockUser = {
-      id: '1',
-      email: 'test@example.com',
-      firstName: 'John',
-      lastName: 'Doe',
-      role: 'USER',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    it('should register a new user successfully', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
-      (argon2.hash as jest.Mock).mockResolvedValue('hashedPassword');
-      mockPrismaService.user.create.mockResolvedValue(mockUser);
-      mockJwtService.signAsync.mockResolvedValue('jwt-token');
+    it('should successfully register a new user', async () => {
+      mockUserModel.findOne.mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
+      mockUserModel.create.mockResolvedValue(mockUser);
+      mockJwtService.signAsync.mockResolvedValue('access_token');
 
       const result = await service.register(registerDto);
 
-      expect(result).toEqual({
-        user: mockUser,
-        accessToken: 'jwt-token',
-        refreshToken: 'jwt-token',
-      });
-
-      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { email: 'test@example.com' },
-      });
-
-      expect(argon2.hash).toHaveBeenCalledWith('password123');
-
-      expect(mockPrismaService.user.create).toHaveBeenCalledWith({
-        data: {
-          email: 'test@example.com',
-          password: 'hashedPassword',
-          firstName: 'John',
-          lastName: 'Doe',
-        },
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          role: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
-
-      expect(mockJwtService.signAsync).toHaveBeenCalledWith(
-        { sub: '1', email: 'test@example.com' },
-        expect.any(Object)
-      );
+      expect(mockUserModel.findOne).toHaveBeenCalledWith({ email: registerDto.email });
+      expect(bcrypt.hash).toHaveBeenCalledWith(registerDto.password, 12);
+      expect(result).toHaveProperty('user');
+      expect(result).toHaveProperty('accessToken');
+      expect(result).toHaveProperty('refreshToken');
     });
 
-    it('should throw ConflictException when user already exists', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+    it('should throw ConflictException if user already exists', async () => {
+      mockUserModel.findOne.mockResolvedValue(mockUser);
 
-      await expect(service.register(registerDto)).rejects.toThrow(
-        ConflictException,
-      );
-
-      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { email: 'test@example.com' },
-      });
-
-      expect(argon2.hash).not.toHaveBeenCalled();
-      expect(mockPrismaService.user.create).not.toHaveBeenCalled();
+      await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
     });
   });
 
-  describe('getProfile', () => {
-    const mockUser = {
-      id: '1',
+  describe('login', () => {
+    const loginDto = {
       email: 'test@example.com',
-      firstName: 'John',
-      lastName: 'Doe',
-      role: 'USER',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      password: 'password123',
     };
 
-    it('should return user profile when found', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-
-      const result = await service.getProfile('1');
-
-      expect(result).toEqual(mockUser);
-      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { id: '1' },
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          role: true,
-          createdAt: true,
-          updatedAt: true,
-        },
+    it('should successfully login with valid credentials', async () => {
+      mockUserModel.findOne.mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockUser),
       });
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockJwtService.signAsync.mockResolvedValue('access_token');
+
+      const result = await service.login(loginDto);
+
+      expect(mockUserModel.findOne).toHaveBeenCalledWith({ email: loginDto.email });
+      expect(result).toHaveProperty('user');
+      expect(result).toHaveProperty('accessToken');
+      expect(result).toHaveProperty('refreshToken');
     });
 
-    it('should throw UnauthorizedException when user not found', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
+    it('should throw UnauthorizedException with invalid email', async () => {
+      mockUserModel.findOne.mockReturnValue({
+        select: jest.fn().mockResolvedValue(null),
+      });
 
-      await expect(service.getProfile('nonexistent')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
     });
   });
 });

@@ -1,12 +1,13 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import LoginPage from '../page';
 import { useAuthStore } from '@/store/authStore';
 
 // Mock Next.js navigation
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
+  useSearchParams: jest.fn(),
 }));
 
 // Mock the auth store
@@ -18,6 +19,7 @@ const mockPush = jest.fn();
 const mockLogin = jest.fn();
 
 const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
+const mockUseSearchParams = useSearchParams as jest.MockedFunction<typeof useSearchParams>;
 const mockUseAuthStore = useAuthStore as jest.MockedFunction<typeof useAuthStore>;
 
 describe('LoginPage', () => {
@@ -26,6 +28,10 @@ describe('LoginPage', () => {
     
     mockUseRouter.mockReturnValue({
       push: mockPush,
+    } as any);
+    
+    mockUseSearchParams.mockReturnValue({
+      get: jest.fn().mockReturnValue(null),
     } as any);
     
     mockUseAuthStore.mockReturnValue({

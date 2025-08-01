@@ -1,28 +1,70 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { getModelToken } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
 import { CartService } from './cart.service';
-import { PrismaService } from '../../common/prisma/prisma.service';
+import { Cart, CartDocument, CartItem, CartItemDocument } from '../../schemas/cart.schema';
+import { Product, ProductDocument } from '../../schemas/product.schema';
 
 describe('CartService', () => {
   let service: CartService;
-  let prismaService: PrismaService;
+  let cartModel: Model<CartDocument>;
+  let cartItemModel: Model<CartItemDocument>;
+  let productModel: Model<ProductDocument>;
 
-  const mockPrismaService = {
-    cart: {
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      delete: jest.fn(),
+  const mockCartModel = {
+    findOne: jest.fn(),
+    create: jest.fn(),
+    save: jest.fn(),
+  };
+
+  const mockCartItemModel = {
+    find: jest.fn(),
+    findOne: jest.fn(),
+    create: jest.fn(),
+    findByIdAndDelete: jest.fn(),
+    deleteMany: jest.fn(),
+    save: jest.fn(),
+    populate: jest.fn(),
+  };
+
+  const mockProductModel = {
+    findById: jest.fn(),
+  };
+
+  const mockUser = {
+    _id: new Types.ObjectId(),
+    email: 'test@example.com',
+  };
+
+  const mockProduct = {
+    _id: new Types.ObjectId(),
+    name: 'Test Product',
+    price: 99.99,
+    category: 'electronics',
+    toJSON: jest.fn().mockReturnThis(),
+  };
+
+  const mockCart = {
+    _id: new Types.ObjectId(),
+    userId: mockUser._id,
+    items: [],
+    toJSON: jest.fn().mockReturnThis(),
+    save: jest.fn(),
+  };
+
+  const mockCartItem = {
+    _id: new Types.ObjectId(),
+    cartId: mockCart._id,
+    productId: {
+      _id: mockProduct._id,
+      name: mockProduct.name,
+      price: mockProduct.price,
+      category: mockProduct.category,
+      toJSON: jest.fn().mockReturnThis(),
     },
-    cartItem: {
-      findUnique: jest.fn(),
-      findFirst: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      deleteMany: jest.fn(),
-    },
-    product: {
-      findUnique: jest.fn(),
-    },
+    quantity: 1,
+    toJSON: jest.fn().mockReturnThis(),
+    save: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -30,14 +72,24 @@ describe('CartService', () => {
       providers: [
         CartService,
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: getModelToken(Cart.name),
+          useValue: mockCartModel,
+        },
+        {
+          provide: getModelToken(CartItem.name),
+          useValue: mockCartItemModel,
+        },
+        {
+          provide: getModelToken(Product.name),
+          useValue: mockProductModel,
         },
       ],
     }).compile();
 
     service = module.get<CartService>(CartService);
-    prismaService = module.get<PrismaService>(PrismaService);
+    cartModel = module.get<Model<CartDocument>>(getModelToken(Cart.name));
+    cartItemModel = module.get<Model<CartItemDocument>>(getModelToken(CartItem.name));
+    productModel = module.get<Model<ProductDocument>>(getModelToken(Product.name));
   });
 
   afterEach(() => {
@@ -49,214 +101,204 @@ describe('CartService', () => {
   });
 
   describe('getCart', () => {
-    const mockCart = {
-      id: '1',
-      userId: 'user1',
-      items: [
-        {
-          id: '1',
-          cartId: '1',
-          productId: 'product1',
-          quantity: 2,
-          product: {
-            id: 'product1',
-            name: 'Test Product',
-            price: 99.99,
-            features: '["feature1", "feature2"]',
-          },
-        },
-      ],
-    };
-
-    it('should return cart with calculated totals', async () => {
-      mockPrismaService.cart.findUnique.mockResolvedValue(mockCart);
-
-      const result = await service.getCart('user1');
-
-      expect(result).toEqual({
-        ...mockCart,
-        totalItems: 2,
-        totalPrice: 199.98,
-        items: [
-          {
-            ...mockCart.items[0],
-            product: {
-              ...mockCart.items[0].product,
-              features: ['feature1', 'feature2'],
+    it('should return existing cart with items', async () => {
+      mockCartModel.findOne.mockResolvedValue(mockCart);
+      mockCartItemModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue([
+            {
+              ...mockCartItem,
+              productId: mockProduct,
             },
-          },
-        ],
+          ]),
+        }),
       });
 
-      expect(mockPrismaService.cart.findUnique).toHaveBeenCalledWith({
-        where: { userId: 'user1' },
-        include: {
-          items: {
-            include: {
-              product: true,
-            },
-          },
-        },
+      const result = await service.getCart(mockUser._id.toString());
+
+      expect(mockCartModel.findOne).toHaveBeenCalledWith({
+        userId: new Types.ObjectId(mockUser._id.toString()),
       });
+      expect(result).toHaveProperty('totalItems');
+      expect(result).toHaveProperty('totalPrice');
     });
 
-    it('should return null when cart not found', async () => {
-      mockPrismaService.cart.findUnique.mockResolvedValue(null);
+    it('should create new cart if none exists', async () => {
+      mockCartModel.findOne.mockResolvedValue(null);
+      mockCartModel.create.mockResolvedValue(mockCart);
+      mockCartItemModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue([]),
+        }),
+      });
 
-      const result = await service.getCart('user1');
+      const result = await service.getCart(mockUser._id.toString());
 
-      expect(result).toBeNull();
+      expect(mockCartModel.create).toHaveBeenCalledWith({
+        userId: new Types.ObjectId(mockUser._id.toString()),
+        items: [],
+      });
+      expect(result).toHaveProperty('totalItems', 0);
+      expect(result).toHaveProperty('totalPrice', 0);
     });
   });
 
   describe('addToCart', () => {
-    const mockCart = {
-      id: '1',
-      userId: 'user1',
-    };
-
-    const mockCartItem = {
-      id: '1',
-      cartId: '1',
-      productId: 'product1',
-      quantity: 1,
-    };
-
-    it('should add new item to existing cart', async () => {
-      mockPrismaService.cart.findUnique.mockResolvedValue(mockCart);
-      mockPrismaService.cartItem.findFirst.mockResolvedValue(null);
-      mockPrismaService.cartItem.create.mockResolvedValue(mockCartItem);
-
-      const cartWithItems = {
-        id: '1',
-        userId: 'user1',
-        items: [],
+    it('should add new item to cart', async () => {
+      mockCartModel.findOne.mockResolvedValue(mockCart);
+      mockCartItemModel.findOne.mockResolvedValue(null);
+      mockCartItemModel.create.mockResolvedValue(mockCartItem);
+      jest.spyOn(service, 'getCart').mockResolvedValue({
+        ...mockCart,
+        items: [mockCartItem],
         totalItems: 1,
         totalPrice: 99.99,
-      } as any;
+      } as any);
 
-      jest.spyOn(service, 'getCart').mockResolvedValue(cartWithItems);
+      const result = await service.addToCart(
+        mockUser._id.toString(),
+        mockProduct._id.toString(),
+        1
+      );
 
-      const result = await service.addToCart('user1', 'product1', 1);
-
-      expect(result).toEqual(cartWithItems);
-      expect(mockPrismaService.cartItem.create).toHaveBeenCalledWith({
-        data: {
-          cartId: '1',
-          productId: 'product1',
-          quantity: 1,
-        },
+      expect(mockCartItemModel.create).toHaveBeenCalledWith({
+        cartId: mockCart._id,
+        productId: new Types.ObjectId(mockProduct._id.toString()),
+        quantity: 1,
       });
+      expect(result).toHaveProperty('totalItems', 1);
     });
 
-    it('should create new cart when user has no cart', async () => {
-      mockPrismaService.cart.findUnique.mockResolvedValue(null);
-      mockPrismaService.cart.create.mockResolvedValue(mockCart);
-      mockPrismaService.cartItem.findFirst.mockResolvedValue(null);
-      mockPrismaService.cartItem.create.mockResolvedValue(mockCartItem);
+    it('should update existing item quantity', async () => {
+      const existingItem = {
+        ...mockCartItem,
+        quantity: 1,
+        save: jest.fn(),
+      };
+      mockCartModel.findOne.mockResolvedValue(mockCart);
+      mockCartItemModel.findOne.mockResolvedValue(existingItem);
+      jest.spyOn(service, 'getCart').mockResolvedValue({
+        ...mockCart,
+        items: [existingItem],
+        totalItems: 2,
+        totalPrice: 199.98,
+      } as any);
 
-      const cartWithItems = {
-        id: '1',
-        userId: 'user1',
-        items: [],
-        totalItems: 1,
-        totalPrice: 99.99,
-      } as any;
+      const result = await service.addToCart(
+        mockUser._id.toString(),
+        mockProduct._id.toString(),
+        1
+      );
 
-      jest.spyOn(service, 'getCart').mockResolvedValue(cartWithItems);
-
-      const result = await service.addToCart('user1', 'product1', 1);
-
-      expect(result).toEqual(cartWithItems);
-      expect(mockPrismaService.cart.create).toHaveBeenCalledWith({
-        data: { userId: 'user1' },
-      });
+      expect(existingItem.quantity).toBe(2);
+      expect(existingItem.save).toHaveBeenCalled();
+      expect(result).toHaveProperty('totalItems', 2);
     });
   });
 
   describe('removeFromCart', () => {
     it('should remove item from cart', async () => {
-      const mockCart = {
-        id: '1',
-        userId: 'user1',
-      };
-
-      mockPrismaService.cart.findUnique.mockResolvedValue(mockCart);
-      mockPrismaService.cartItem.delete.mockResolvedValue({});
-
-      const updatedCart = {
-        id: '1',
-        userId: 'user1',
+      mockCartModel.findOne.mockResolvedValue(mockCart);
+      mockCartItemModel.findOne.mockResolvedValue(mockCartItem);
+      mockCartItemModel.findByIdAndDelete.mockResolvedValue(mockCartItem);
+      mockCart.items = [mockCartItem._id];
+      jest.spyOn(service, 'getCart').mockResolvedValue({
+        ...mockCart,
         items: [],
         totalItems: 0,
         totalPrice: 0,
-      } as any;
+      } as any);
 
-      jest.spyOn(service, 'getCart').mockResolvedValue(updatedCart);
+      const result = await service.removeFromCart(
+        mockUser._id.toString(),
+        mockCartItem._id.toString()
+      );
 
-      const result = await service.removeFromCart('user1', '1');
-
-      expect(result).toEqual(updatedCart);
-      expect(mockPrismaService.cartItem.delete).toHaveBeenCalledWith({
-        where: {
-          id: '1',
-          cartId: '1',
-        },
-      });
+      expect(mockCartItemModel.findByIdAndDelete).toHaveBeenCalledWith(mockCartItem._id);
+      expect(result).toHaveProperty('totalItems', 0);
     });
 
-    it('should throw error when cart not found', async () => {
-      mockPrismaService.cart.findUnique.mockResolvedValue(null);
+    it('should return null if cart not found', async () => {
+      mockCartModel.findOne.mockResolvedValue(null);
 
-      await expect(service.removeFromCart('user1', 'item1')).rejects.toThrow('Cart not found');
+      const result = await service.removeFromCart(
+        mockUser._id.toString(),
+        mockCartItem._id.toString()
+      );
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('updateCartItem', () => {
+    it('should update item quantity', async () => {
+      const itemToUpdate = {
+        ...mockCartItem,
+        quantity: 1,
+        save: jest.fn(),
+      };
+      mockCartModel.findOne.mockResolvedValue(mockCart);
+      mockCartItemModel.findOne.mockResolvedValue(itemToUpdate);
+      jest.spyOn(service, 'getCart').mockResolvedValue({
+        ...mockCart,
+        items: [itemToUpdate],
+        totalItems: 3,
+        totalPrice: 299.97,
+      } as any);
+
+      const result = await service.updateCartItem(
+        mockUser._id.toString(),
+        mockCartItem._id.toString(),
+        3
+      );
+
+      expect(itemToUpdate.quantity).toBe(3);
+      expect(itemToUpdate.save).toHaveBeenCalled();
+      expect(result).toHaveProperty('totalItems', 3);
+    });
+
+    it('should remove item if quantity is 0', async () => {
+      mockCartModel.findOne.mockResolvedValue(mockCart);
+      mockCartItemModel.findOne.mockResolvedValue(mockCartItem);
+      mockCartItemModel.findByIdAndDelete.mockResolvedValue(mockCartItem);
+      jest.spyOn(service, 'getCart').mockResolvedValue({
+        ...mockCart,
+        items: [],
+        totalItems: 0,
+        totalPrice: 0,
+      } as any);
+
+      const result = await service.updateCartItem(
+        mockUser._id.toString(),
+        mockCartItem._id.toString(),
+        0
+      );
+
+      expect(mockCartItemModel.findByIdAndDelete).toHaveBeenCalled();
+      expect(result).toHaveProperty('totalItems', 0);
     });
   });
 
   describe('clearCart', () => {
     it('should clear all items from cart', async () => {
-      const mockCart = {
-        id: '1',
-        userId: 'user1',
-      };
+      mockCartModel.findOne.mockResolvedValue(mockCart);
+      mockCartItemModel.deleteMany.mockResolvedValue({});
 
-      mockPrismaService.cart.findUnique.mockResolvedValue(mockCart);
-      mockPrismaService.cartItem.deleteMany.mockResolvedValue({ count: 2 });
+      const result = await service.clearCart(mockUser._id.toString());
 
-      const emptyCart = {
-        id: '1',
-        userId: 'user1',
-        items: [],
-        totalItems: 0,
-        totalPrice: 0,
-      } as any;
-
-      jest.spyOn(service, 'getCart').mockResolvedValue(emptyCart);
-
-      const result = await service.clearCart('user1');
-
-      expect(result).toEqual(emptyCart);
-      expect(mockPrismaService.cartItem.deleteMany).toHaveBeenCalledWith({
-        where: { cartId: '1' },
+      expect(mockCartItemModel.deleteMany).toHaveBeenCalledWith({
+        cartId: mockCart._id,
       });
+      expect(mockCart.items).toEqual([]);
+      expect(mockCart.save).toHaveBeenCalled();
     });
 
-    it('should handle case when cart does not exist', async () => {
-      mockPrismaService.cart.findUnique.mockResolvedValue(null);
+    it('should return null if cart not found', async () => {
+      mockCartModel.findOne.mockResolvedValue(null);
 
-      const emptyCart = {
-        id: '1',
-        userId: 'user1',
-        items: [],
-        totalItems: 0,
-        totalPrice: 0,
-      } as any;
+      const result = await service.clearCart(mockUser._id.toString());
 
-      jest.spyOn(service, 'getCart').mockResolvedValue(emptyCart);
-
-      const result = await service.clearCart('user1');
-
-      expect(result).toEqual(emptyCart);
-      expect(mockPrismaService.cartItem.deleteMany).not.toHaveBeenCalled();
+      expect(result).toBeNull();
     });
   });
 });

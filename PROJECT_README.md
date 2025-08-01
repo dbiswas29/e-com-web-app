@@ -20,7 +20,7 @@ A full-stack e-commerce web application built with Next.js frontend and NestJS b
 - **Order Management** with order creation and tracking
 - **User Management** with profiles and roles
 - **API Documentation** with Swagger/OpenAPI
-- **Database** with Prisma and SQLite
+- **Database** with MongoDB and Mongoose
 
 ## 📁 Project Structure
 
@@ -51,8 +51,8 @@ A full-stack e-commerce web application built with Next.js frontend and NestJS b
 │   │   │   ├── products/    # Product management
 │   │   │   ├── cart/        # Cart management
 │   │   │   └── orders/      # Order management
-│   │   └── common/          # Shared modules (Prisma)
-│   └── prisma/              # Database schema and migrations
+│   │   ├── schemas/         # MongoDB schemas
+│   │   └── database/        # Database seeder
 └── package.json             # Root package manager
 ```
 
@@ -90,9 +90,7 @@ A full-stack e-commerce web application built with Next.js frontend and NestJS b
    ```bash
    cd backend
    npm install
-   npx prisma generate
-   npx prisma db push
-   npx prisma db seed
+   # Make sure MongoDB is running on localhost:27017
    npm run start:dev
    ```
 
@@ -229,11 +227,10 @@ The database is seeded with:
 ### Backend
 - NestJS
 - TypeScript
-- Prisma ORM
-- SQLite
+- MongoDB with Mongoose ODM
 - JWT with Passport.js
 - Swagger/OpenAPI
-- Argon2 (password hashing)
+- bcryptjs (password hashing)
 - Helmet (security)
 
 ## 🤝 Contributing

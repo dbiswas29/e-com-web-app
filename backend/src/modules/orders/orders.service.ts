@@ -1,121 +1,117 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../common/prisma/prisma.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Order, OrderDocument, OrderItem, OrderItemDocument, OrderStatus } from '../../schemas/order.schema';
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
+    @InjectModel(OrderItem.name) private orderItemModel: Model<OrderItemDocument>,
+  ) {}
 
-  async createOrder(userId: string, items: any[], shippingInfo: any, billingInfo: any) {
-    // Calculate total amount
-    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-    const order = await this.prisma.order.create({
-      data: {
-        userId,
-        totalAmount: total,
-        status: 'PENDING',
-        // Shipping information
-        shippingFirstName: shippingInfo.firstName,
-        shippingLastName: shippingInfo.lastName,
-        shippingAddress1: shippingInfo.address1,
-        shippingAddress2: shippingInfo.address2,
-        shippingCity: shippingInfo.city,
-        shippingState: shippingInfo.state,
-        shippingZipCode: shippingInfo.zipCode,
-        shippingCountry: shippingInfo.country,
-        shippingPhone: shippingInfo.phone,
-        // Billing information
-        billingFirstName: billingInfo.firstName,
-        billingLastName: billingInfo.lastName,
-        billingAddress1: billingInfo.address1,
-        billingAddress2: billingInfo.address2,
-        billingCity: billingInfo.city,
-        billingState: billingInfo.state,
-        billingZipCode: billingInfo.zipCode,
-        billingCountry: billingInfo.country,
-        billingPhone: billingInfo.phone,
-        items: {
-          create: items.map(item => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            price: item.price,
-          })),
-        },
-      },
-      include: {
-        user: {
-          select: { id: true, email: true, firstName: true, lastName: true },
-        },
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
+  async create(orderData: any) {
+    const order = await this.orderModel.create({
+      ...orderData,
+      userId: new Types.ObjectId(orderData.userId),
     });
 
-    return order;
+    // Create order items
+    if (orderData.items && orderData.items.length > 0) {
+      const orderItems = orderData.items.map((item: any) => ({
+        orderId: order._id,
+        productId: new Types.ObjectId(item.productId),
+        quantity: item.quantity,
+        price: item.price,
+      }));
+
+      const createdItems = await this.orderItemModel.insertMany(orderItems);
+      order.items = createdItems.map(item => item._id);
+      await order.save();
+    }
+
+    return this.findOne(order._id.toString());
+  }
+
+  async findAll() {
+    return this.orderModel
+      .find()
+      .populate({
+        path: 'items',
+        populate: {
+          path: 'productId',
+          model: 'Product'
+        }
+      })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async findByUserId(userId: string) {
+    return this.orderModel
+      .find({ userId: new Types.ObjectId(userId) })
+      .populate({
+        path: 'items',
+        populate: {
+          path: 'productId',
+          model: 'Product'
+        }
+      })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async findOne(id: string): Promise<OrderDocument | null> {
+    return this.orderModel
+      .findById(id)
+      .populate({
+        path: 'items',
+        populate: {
+          path: 'productId',
+          model: 'Product'
+        }
+      })
+      .exec();
+  }
+
+  async updateStatus(id: string, status: OrderStatus): Promise<OrderDocument | null> {
+    return this.orderModel
+      .findByIdAndUpdate(id, { status }, { new: true })
+      .populate({
+        path: 'items',
+        populate: {
+          path: 'productId',
+          model: 'Product'
+        }
+      })
+      .exec();
+  }
+
+  // Alias methods to match controller expectations
+  async createOrder(orderData: any) {
+    return this.create(orderData);
   }
 
   async getUserOrders(userId: string) {
-    const orders = await this.prisma.order.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: {
-          select: { id: true, email: true, firstName: true, lastName: true },
-        },
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
-    });
-
-    return orders;
+    return this.findByUserId(userId);
   }
 
-  async getOrderById(orderId: string, userId: string) {
-    const order = await this.prisma.order.findFirst({
-      where: { id: orderId, userId },
-      include: {
-        user: {
-          select: { id: true, email: true, firstName: true, lastName: true },
-        },
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
-    });
-
+  async getOrderById(orderId: string, userId?: string): Promise<OrderDocument | null> {
+    const order = await this.findOne(orderId);
+    
+    // If userId is provided, verify the order belongs to the user
+    if (userId && order && order.userId.toString() !== userId) {
+      return null;
+    }
+    
     return order;
   }
 
   async updateOrderStatus(orderId: string, status: string) {
-    return this.prisma.order.update({
-      where: { id: orderId },
-      data: { status },
-    });
+    return this.updateStatus(orderId, status as OrderStatus);
   }
 
   async getAllOrders() {
-    const orders = await this.prisma.order.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: {
-          select: { id: true, email: true, firstName: true, lastName: true },
-        },
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
-    });
-
-    return orders;
+    return this.findAll();
   }
 }

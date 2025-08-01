@@ -53,12 +53,13 @@ export class OrdersController {
       };
     },
   ) {
-    return this.ordersService.createOrder(
-      req.user.id,
-      body.items,
-      body.shippingInfo,
-      body.billingInfo,
-    );
+    return this.ordersService.createOrder({
+      userId: req.user.id,
+      items: body.items,
+      totalAmount: body.items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0),
+      ...body.shippingInfo,
+      ...body.billingInfo,
+    });
   }
 
   @Get()
@@ -79,7 +80,7 @@ export class OrdersController {
     @Param('id') orderId: string,
     @Body() body: { status: string },
   ) {
-    return this.ordersService.updateOrderStatus(orderId, body.status);
+    return this.ordersService.updateOrderStatus(orderId, body.status as any);
   }
 
   @Get('admin/all')
